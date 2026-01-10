@@ -410,6 +410,7 @@ class PDFToEPUBConverter {
         let chapterRegex;
         switch (pattern) {
             case 'chinese':
+                // 匹配"第X章/节/回"，排除"第X页"、"第X-Y页"等分页信息
                 chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?)$/gm;
                 break;
             case 'english':
@@ -423,20 +424,30 @@ class PDFToEPUBConverter {
                 chapterRegex = /^(\d{2}(?:\s+.*)?)$/gm;
                 break;
             default: // auto
+                // 排除"第X页"、"第X-Y页"等分页信息，只匹配"第X章/节/回"
                 chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?|Chapter\s+\d+.*?|\d+\.\s+.{2,50}|\d{2}(?:\s+.{2,50})?)$/gim;
         }
+        
+        // 过滤掉分页信息（如"第1页"、"第 1-5 页"、"Page 1"等）
+        const pageInfoPattern = /^(第\s*[\d\-\s]+\s*页|Page\s*[\d\-\s]+|[\d\-]+\s*页)$/i;
 
         if (this.splitChapters.checked) {
             const matches = [...allText.matchAll(chapterRegex)];
             
-            if (matches.length > 0) {
+            // 过滤掉分页信息
+            const filteredMatches = matches.filter(match => {
+                const title = match[1].trim();
+                return !pageInfoPattern.test(title);
+            });
+            
+            if (filteredMatches.length > 0) {
                 this.extractedContent.chapters = [];
                 
-                for (let i = 0; i < matches.length; i++) {
-                    const match = matches[i];
+                for (let i = 0; i < filteredMatches.length; i++) {
+                    const match = filteredMatches[i];
                     const title = match[1].trim();
                     const startIndex = match.index + match[0].length;
-                    const endIndex = matches[i + 1] ? matches[i + 1].index : allText.length;
+                    const endIndex = filteredMatches[i + 1] ? filteredMatches[i + 1].index : allText.length;
                     const content = allText.substring(startIndex, endIndex).trim();
                     
                     this.extractedContent.chapters.push({
