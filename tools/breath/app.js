@@ -141,7 +141,7 @@ class BreathApp {
 
     // 设置呼吸模式
     setRhythm(rhythm) {
-        if (this.isRunning) return;
+        if (this.isRunning && !this.isPaused) return;
 
         this.rhythmMode = rhythm;
         this.rhythmBtns.forEach(btn => {
