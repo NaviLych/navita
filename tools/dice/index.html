@@ -6,14 +6,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
-    <title>🎲 骰子决策器</title>
+    <title>🎲 骰子</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
         <!-- 顶部控制栏 -->
         <header class="control-bar">
-            <h1>🎲 骰子决策器</h1>
+            <h1>🎲 骰子</h1>
             <div class="dice-controls">
                 <button class="btn btn-remove" id="removeDice" title="减少骰子">
                     <span>−</span>
@@ -44,46 +44,12 @@
                     <span class="label">总点数</span>
                     <span class="value" id="totalPoints">-</span>
                 </div>
-                <div class="decision-result">
-                    <span class="label">决策结果</span>
-                    <span class="value" id="decisionResult">点击投掷开始</span>
-                </div>
             </div>
         </section>
 
         <!-- 点数范围提示 -->
         <div class="range-hint" id="rangeHint">
             点数范围: 1 - 6
-        </div>
-    </div>
-
-    <!-- 设置面板 -->
-    <div class="settings-overlay" id="settingsOverlay">
-        <div class="settings-panel">
-            <div class="settings-header">
-                <h2>⚙️ 点数决策设置</h2>
-                <button class="close-btn" id="closeSettings">×</button>
-            </div>
-            <div class="settings-body">
-                <div class="range-editor">
-                    <div class="range-track" id="rangeTrack">
-                        <!-- 动态生成范围区间 -->
-                    </div>
-                    <div class="range-scale" id="rangeScale">
-                        <!-- 刻度线 -->
-                    </div>
-                </div>
-                <div class="decision-editor" id="decisionEditor">
-                    <!-- 决策输入区 -->
-                </div>
-            </div>
-            <div class="settings-actions">
-                <button class="btn btn-add-range" id="addRange">+ 添加区间</button>
-                <button class="btn btn-remove-range" id="removeRange">− 删除区间</button>
-            </div>
-            <div class="settings-footer">
-                <button class="btn btn-save" id="saveSettings">保存设置</button>
-            </div>
         </div>
     </div>
 
