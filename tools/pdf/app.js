@@ -180,7 +180,10 @@ class PDFToEPUBConverter {
         this.previewBtn.textContent = '正在提取...';
 
         try {
-            await this.extractPDFContent(5); // Preview first 5 pages
+            // 提取全部内容用于章节预览
+            await this.extractPDFContent();
+            // 处理章节分割
+            await this.processChaptersForPreview();
             this.displayPreview();
             this.previewSection.hidden = false;
         } catch (error) {
@@ -191,16 +194,113 @@ class PDFToEPUBConverter {
             this.previewBtn.textContent = '预览内容';
         }
     }
+    
+    /**
+     * 用于预览的章节处理（与 processChapters 相同逻辑，但不添加进度信息）
+     */
+    async processChaptersForPreview() {
+        // Merge all pages and apply cross-page paragraph merging
+        let allText = this.extractedContent.pages.map(p => p.text).join('\n\n');
+        
+        // Apply additional smart paragraph cleanup if enabled
+        if (this.smartParagraph.checked) {
+            allText = this.cleanupParagraphs(allText);
+        }
+        
+        const pattern = this.chapterPattern.value;
+        
+        let chapterRegex;
+        switch (pattern) {
+            case 'chinese':
+                // 匹配"第X章/节/回"，排除"第X页"、"第X-Y页"等分页信息
+                chapterRegex = /^(第\s*[一二三四五六七八九十百千\d]+\s*[章节回部篇卷集](?![\d\-~～]*\s*页).*?)$/gm;
+                break;
+            case 'english':
+                chapterRegex = /^(Chapter\s+\d+.*?)$/gim;
+                break;
+            case 'number':
+                chapterRegex = /^(\d+\.\s+.*?)$/gm;
+                break;
+            case 'padded':
+                // 匹配两位数字开头的行，如 01 02 03，后面可以跟空格和标题文字，但排除分页信息
+                chapterRegex = /^(\d{2}(?:\s+(?!.*页\s*$).*)?)$/gm;
+                break;
+            default: // auto
+                // 排除"第X页"、"第X-Y页"等分页信息，只匹配"第X章/节/回"
+                chapterRegex = /^(第\s*[一二三四五六七八九十百千\d]+\s*[章节回部篇卷集](?![\d\-~～]*\s*页).*?|Chapter\s+\d+.*?|\d+\.\s+(?!.*页\s*$).{2,50}|\d{2}(?:\s+(?!.*页\s*$).{2,50})?)$/gim;
+        }
+        
+        // 过滤掉分页信息（如"第1页"、"第 1-5 页"、"Page 1"等）
+        const pageInfoPattern = /^(第\s*[\d\-\s~～]+\s*页|Page\s*[\d\-\s~]+|[\d\-~～]+\s*页|\d+\s*[-~～]\s*\d+)$/i;
+
+        if (this.splitChapters.checked) {
+            const matches = [...allText.matchAll(chapterRegex)];
+            
+            // 过滤掉分页信息
+            const filteredMatches = matches.filter(match => {
+                const title = match[1].trim();
+                // 检查是否是分页信息
+                if (pageInfoPattern.test(title)) return false;
+                // 检查是否包含"页"字且是分页格式
+                if (/页\s*$/.test(title) && /[\d\-~～]/.test(title)) return false;
+                return true;
+            });
+            
+            if (filteredMatches.length > 0) {
+                this.extractedContent.chapters = [];
+                
+                for (let i = 0; i < filteredMatches.length; i++) {
+                    const match = filteredMatches[i];
+                    const title = match[1].trim();
+                    const startIndex = match.index + match[0].length;
+                    const endIndex = filteredMatches[i + 1] ? filteredMatches[i + 1].index : allText.length;
+                    const content = allText.substring(startIndex, endIndex).trim();
+                    
+                    this.extractedContent.chapters.push({
+                        title,
+                        content,
+                        id: `chapter_${i + 1}`
+                    });
+                }
+            } else {
+                // 未识别到章节，创建默认章节
+                this.createDefaultChaptersForPreview(allText);
+            }
+        } else {
+            this.createDefaultChaptersForPreview(allText);
+        }
+    }
+    
+    /**
+     * 用于预览的默认章节创建
+     */
+    createDefaultChaptersForPreview(allText) {
+        const pagesPerChapter = 10;
+        this.extractedContent.chapters = [];
+        
+        for (let i = 0; i < this.extractedContent.pages.length; i += pagesPerChapter) {
+            const endPage = Math.min(i + pagesPerChapter, this.extractedContent.pages.length);
+            const chapterPages = this.extractedContent.pages.slice(i, endPage);
+            const content = chapterPages.map(p => p.text).join('\n\n');
+            
+            this.extractedContent.chapters.push({
+                title: `第 ${i + 1}-${endPage} 页`,
+                content,
+                id: `chapter_${Math.floor(i / pagesPerChapter) + 1}`
+            });
+        }
+    }
 
     displayPreview() {
         let html = '<div class="preview-chapters">';
+        html += `<div class="preview-summary">共识别到 <strong>${this.extractedContent.chapters.length}</strong> 个章节</div>`;
         
         if (this.extractedContent.chapters.length > 0) {
             this.extractedContent.chapters.forEach((chapter, index) => {
                 html += `
                     <div class="chapter">
-                        <div class="chapter-title">📖 ${chapter.title || `章节 ${index + 1}`}</div>
-                        <p>${this.truncateText(chapter.content, 500)}</p>
+                        <div class="chapter-title">📖 ${index + 1}. ${chapter.title || `章节 ${index + 1}`}</div>
+                        <p>${this.truncateText(chapter.content, 300)}</p>
                     </div>
                 `;
             });
@@ -209,7 +309,7 @@ class PDFToEPUBConverter {
                 html += `
                     <div class="chapter">
                         <div class="chapter-title">📄 第 ${index + 1} 页</div>
-                        <p>${this.truncateText(page.text, 500)}</p>
+                        <p>${this.truncateText(page.text, 300)}</p>
                     </div>
                 `;
             });
@@ -411,7 +511,7 @@ class PDFToEPUBConverter {
         switch (pattern) {
             case 'chinese':
                 // 匹配"第X章/节/回"，排除"第X页"、"第X-Y页"等分页信息
-                chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?)$/gm;
+                chapterRegex = /^(第\s*[一二三四五六七八九十百千\d]+\s*[章节回部篇卷集](?![\d\-~～]*\s*页).*?)$/gm;
                 break;
             case 'english':
                 chapterRegex = /^(Chapter\s+\d+.*?)$/gim;
@@ -420,16 +520,16 @@ class PDFToEPUBConverter {
                 chapterRegex = /^(\d+\.\s+.*?)$/gm;
                 break;
             case 'padded':
-                // 匹配两位数字开头的行，如 01 02 03，后面可以跟空格和标题文字
-                chapterRegex = /^(\d{2}(?:\s+.*)?)$/gm;
+                // 匹配两位数字开头的行，如 01 02 03，后面可以跟空格和标题文字，但排除分页信息
+                chapterRegex = /^(\d{2}(?:\s+(?!.*页\s*$).*)?)$/gm;
                 break;
             default: // auto
                 // 排除"第X页"、"第X-Y页"等分页信息，只匹配"第X章/节/回"
-                chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?|Chapter\s+\d+.*?|\d+\.\s+.{2,50}|\d{2}(?:\s+.{2,50})?)$/gim;
+                chapterRegex = /^(第\s*[一二三四五六七八九十百千\d]+\s*[章节回部篇卷集](?![\d\-~～]*\s*页).*?|Chapter\s+\d+.*?|\d+\.\s+(?!.*页\s*$).{2,50}|\d{2}(?:\s+(?!.*页\s*$).{2,50})?)$/gim;
         }
         
         // 过滤掉分页信息（如"第1页"、"第 1-5 页"、"Page 1"等）
-        const pageInfoPattern = /^(第\s*[\d\-\s]+\s*页|Page\s*[\d\-\s]+|[\d\-]+\s*页)$/i;
+        const pageInfoPattern = /^(第\s*[\d\-\s~～]+\s*页|Page\s*[\d\-\s~]+|[\d\-~～]+\s*页|\d+\s*[-~～]\s*\d+)$/i;
 
         if (this.splitChapters.checked) {
             const matches = [...allText.matchAll(chapterRegex)];
@@ -437,7 +537,11 @@ class PDFToEPUBConverter {
             // 过滤掉分页信息
             const filteredMatches = matches.filter(match => {
                 const title = match[1].trim();
-                return !pageInfoPattern.test(title);
+                // 检查是否是分页信息
+                if (pageInfoPattern.test(title)) return false;
+                // 检查是否包含"页"字且是分页格式
+                if (/页\s*$/.test(title) && /[\d\-~～]/.test(title)) return false;
+                return true;
             });
             
             if (filteredMatches.length > 0) {
