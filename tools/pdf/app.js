@@ -45,6 +45,7 @@ class PDFToEPUBConverter {
         this.preserveLinks = document.getElementById('preserveLinks');
         this.generateToc = document.getElementById('generateToc');
         this.splitChapters = document.getElementById('splitChapters');
+        this.smartParagraph = document.getElementById('smartParagraph');
         this.fontSize = document.getElementById('fontSize');
         this.chapterPattern = document.getElementById('chapterPattern');
 
@@ -275,17 +276,49 @@ class PDFToEPUBConverter {
             const page = await this.pdfDocument.getPage(i);
             const textContent = await page.getTextContent();
             
-            // Extract text
-            let pageText = '';
+            // Extract text with line information
+            const lines = [];
+            let currentLine = '';
             let lastY = null;
+            let lastX = null;
+            let lastFontSize = null;
             
             textContent.items.forEach(item => {
-                if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
-                    pageText += '\n';
+                const y = item.transform[5];
+                const x = item.transform[4];
+                const fontSize = Math.abs(item.transform[0]) || 12;
+                
+                // Detect new line (Y position changed significantly)
+                if (lastY !== null && Math.abs(y - lastY) > 5) {
+                    if (currentLine.trim()) {
+                        lines.push({
+                            text: currentLine.trim(),
+                            x: lastX,
+                            fontSize: lastFontSize
+                        });
+                    }
+                    currentLine = '';
                 }
-                pageText += item.str;
-                lastY = item.transform[5];
+                
+                currentLine += item.str;
+                if (lastX === null) lastX = x;
+                lastY = y;
+                lastFontSize = fontSize;
             });
+            
+            // Don't forget the last line
+            if (currentLine.trim()) {
+                lines.push({
+                    text: currentLine.trim(),
+                    x: lastX,
+                    fontSize: lastFontSize
+                });
+            }
+            
+            // Apply smart paragraph merging if enabled
+            const pageText = this.smartParagraph.checked 
+                ? this.smartParagraphMerge(lines)
+                : lines.map(l => l.text).join('\n');
 
             this.extractedContent.pages.push({
                 pageNum: i,
@@ -364,7 +397,14 @@ class PDFToEPUBConverter {
     }
 
     async processChapters() {
-        const allText = this.extractedContent.pages.map(p => p.text).join('\n\n');
+        // Merge all pages and apply cross-page paragraph merging
+        let allText = this.extractedContent.pages.map(p => p.text).join('\n\n');
+        
+        // Apply additional smart paragraph cleanup if enabled
+        if (this.smartParagraph.checked) {
+            allText = this.cleanupParagraphs(allText);
+        }
+        
         const pattern = this.chapterPattern.value;
         
         let chapterRegex;
@@ -418,7 +458,11 @@ class PDFToEPUBConverter {
         
         for (let i = 0; i < this.extractedContent.pages.length; i += pagesPerChapter) {
             const chapterPages = this.extractedContent.pages.slice(i, i + pagesPerChapter);
-            const content = chapterPages.map(p => p.text).join('\n\n');
+            let content = chapterPages.map(p => p.text).join('\n\n');
+            // Apply paragraph cleanup if enabled
+            if (this.smartParagraph.checked) {
+                content = this.cleanupParagraphs(content);
+            }
             const startPage = i + 1;
             const endPage = Math.min(i + pagesPerChapter, this.extractedContent.pages.length);
             
@@ -430,6 +474,308 @@ class PDFToEPUBConverter {
         }
         
         this.addProgressDetail(`✓ 创建了 ${this.extractedContent.chapters.length} 个默认章节`);
+    }
+
+    /**
+     * 智能段落合并 - 处理PDF中被错误换行的段落
+     * @param {Array} lines - 包含文本和位置信息的行数组
+     * @returns {string} - 合并后的文本
+     */
+    smartParagraphMerge(lines) {
+        if (lines.length === 0) return '';
+        
+        const result = [];
+        let currentParagraph = '';
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const nextLine = lines[i + 1];
+            const text = line.text;
+            
+            // 判断当前行是否是段落结束
+            const isEndOfParagraph = this.isLineEndOfParagraph(text, line, nextLine);
+            
+            if (currentParagraph) {
+                // 判断是否应该合并到当前段落
+                if (this.shouldMergeWithPrevious(text, line, lines[i - 1])) {
+                    // 合并时，检查是否需要添加空格（针对英文）
+                    const needsSpace = this.needsSpaceBetween(currentParagraph, text);
+                    currentParagraph += (needsSpace ? ' ' : '') + text;
+                } else {
+                    // 开始新段落
+                    result.push(currentParagraph);
+                    currentParagraph = text;
+                }
+            } else {
+                currentParagraph = text;
+            }
+            
+            // 如果是段落结束，保存当前段落
+            if (isEndOfParagraph && currentParagraph) {
+                result.push(currentParagraph);
+                currentParagraph = '';
+            }
+        }
+        
+        // 保存最后一个段落
+        if (currentParagraph) {
+            result.push(currentParagraph);
+        }
+        
+        return result.join('\n\n');
+    }
+
+    /**
+     * 判断当前行是否是段落的结束
+     */
+    isLineEndOfParagraph(text, currentLine, nextLine) {
+        // 句子结束标点
+        const sentenceEndingPunctuation = /[。！？.!?"'」』）)\]】]$/;
+        
+        // 如果以句子结束标点结尾，可能是段落结束
+        if (sentenceEndingPunctuation.test(text)) {
+            // 如果没有下一行，肯定是结束
+            if (!nextLine) return true;
+            
+            // 如果下一行看起来是新段落的开始
+            if (this.looksLikeNewParagraph(nextLine.text, nextLine, currentLine)) {
+                return true;
+            }
+        }
+        
+        // 如果是空行或特别短的行，可能是段落结束
+        if (text.length < 5) return true;
+        
+        // 如果下一行有明显的缩进差异（新段落通常有缩进）
+        if (nextLine && nextLine.x - currentLine.x > 20) {
+            return true;
+        }
+        
+        // 标题行通常是单独的段落
+        if (this.looksLikeTitle(text, currentLine)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否应该与前一行合并
+     */
+    shouldMergeWithPrevious(text, currentLine, prevLine) {
+        if (!prevLine) return false;
+        
+        const prevText = prevLine.text;
+        
+        // 如果当前行看起来是新段落的开始，不合并
+        if (this.looksLikeNewParagraph(text, currentLine, prevLine)) {
+            return false;
+        }
+        
+        // 如果前一行以句子结束标点结尾，且当前行像是新段落开始
+        const sentenceEndingPunctuation = /[。！？.!?"'」』）)\]】]$/;
+        if (sentenceEndingPunctuation.test(prevText)) {
+            // 检查当前行是否像是新段落（首字缩进、以大写开头等）
+            if (/^[A-Z「『（(【\["']/.test(text) || /^\s{2,}/.test(text)) {
+                return false;
+            }
+        }
+        
+        // 如果前一行以连字符或不完整的句子结尾，应该合并
+        if (/[-—、，,;；:：]$/.test(prevText)) {
+            return true;
+        }
+        
+        // 如果前一行不是以标点结尾，通常应该合并（被强制换行）
+        if (!/[。！？.!?，,、；;：:"'」』）)\]】]$/.test(prevText)) {
+            return true;
+        }
+        
+        // 检查字体大小是否一致（同一段落通常字体一致）
+        if (currentLine.fontSize && prevLine.fontSize) {
+            if (Math.abs(currentLine.fontSize - prevLine.fontSize) < 2) {
+                // 字体大小相近，且前一行不是句子结束
+                if (!sentenceEndingPunctuation.test(prevText)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断一行是否看起来像新段落的开始
+     */
+    looksLikeNewParagraph(text, currentLine, prevLine) {
+        // 章节标题模式
+        if (/^(第[一二三四五六七八九十百千\d]+[章节回]|Chapter\s+\d+|\d+\.\s)/i.test(text)) {
+            return true;
+        }
+        
+        // 列表项
+        if (/^[•·\-\*●○◆◇▪▫]\s/.test(text) || /^\d+[.、)）]\s/.test(text)) {
+            return true;
+        }
+        
+        // 明显的缩进（中文段落首行缩进）
+        if (prevLine && currentLine.x - prevLine.x > 15) {
+            return true;
+        }
+        
+        // 以引号开始的可能是新段落
+        if (/^[「『"'"']/.test(text) && prevLine && /[。！？.!?]$/.test(prevLine.text)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断一行是否看起来像标题
+     */
+    looksLikeTitle(text, line) {
+        // 标题通常较短
+        if (text.length > 50) return false;
+        
+        // 章节标题模式
+        if (/^(第[一二三四五六七八九十百千\d]+[章节回]|Chapter\s+\d+|Part\s+\d+)/i.test(text)) {
+            return true;
+        }
+        
+        // 全大写的英文标题
+        if (/^[A-Z\s]+$/.test(text) && text.length > 3) {
+            return true;
+        }
+        
+        // 数字编号标题
+        if (/^\d+(\.\d+)*\s+.+$/.test(text) && text.length < 40) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断两段文本之间是否需要空格
+     */
+    needsSpaceBetween(text1, text2) {
+        if (!text1 || !text2) return false;
+        
+        const lastChar = text1.slice(-1);
+        const firstChar = text2.charAt(0);
+        
+        // 中文字符之间不需要空格
+        const isChinese = /[\u4e00-\u9fa5]/;
+        if (isChinese.test(lastChar) || isChinese.test(firstChar)) {
+            return false;
+        }
+        
+        // 英文单词之间需要空格
+        const isAlphanumeric = /[a-zA-Z0-9]/;
+        if (isAlphanumeric.test(lastChar) && isAlphanumeric.test(firstChar)) {
+            return true;
+        }
+        
+        // 标点符号后面跟字母需要空格
+        if (/[.,;:!?]/.test(lastChar) && isAlphanumeric.test(firstChar)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 清理和优化段落结构
+     */
+    cleanupParagraphs(text) {
+        // 移除多余的空行
+        text = text.replace(/\n{3,}/g, '\n\n');
+        
+        // 处理跨页的段落合并
+        // 如果一行不以句子结束标点结尾，且下一段不像新段落，则合并
+        const paragraphs = text.split(/\n\n+/);
+        const result = [];
+        
+        for (let i = 0; i < paragraphs.length; i++) {
+            let para = paragraphs[i].trim();
+            if (!para) continue;
+            
+            // 清理段落内的多余换行（保留必要的换行）
+            para = this.cleanParagraphInternalBreaks(para);
+            
+            // 检查是否需要与下一段合并
+            if (i < paragraphs.length - 1) {
+                const nextPara = paragraphs[i + 1].trim();
+                if (this.shouldMergeParagraphs(para, nextPara)) {
+                    // 合并到下一段
+                    const needsSpace = this.needsSpaceBetween(para, nextPara);
+                    paragraphs[i + 1] = para + (needsSpace ? ' ' : '') + nextPara;
+                    continue;
+                }
+            }
+            
+            result.push(para);
+        }
+        
+        return result.join('\n\n');
+    }
+
+    /**
+     * 清理段落内部的换行
+     */
+    cleanParagraphInternalBreaks(para) {
+        const lines = para.split('\n');
+        if (lines.length <= 1) return para;
+        
+        let result = lines[0];
+        
+        for (let i = 1; i < lines.length; i++) {
+            const prevLine = lines[i - 1].trim();
+            const currentLine = lines[i].trim();
+            
+            if (!currentLine) continue;
+            
+            // 判断是否应该合并
+            const sentenceEnd = /[。！？.!?"'」』）)]$/;
+            
+            if (!sentenceEnd.test(prevLine) && !this.looksLikeNewParagraph(currentLine, {x: 0}, {x: 0})) {
+                // 合并行
+                const needsSpace = this.needsSpaceBetween(result, currentLine);
+                result += (needsSpace ? ' ' : '') + currentLine;
+            } else {
+                result += '\n' + currentLine;
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * 判断两个段落是否应该合并
+     */
+    shouldMergeParagraphs(para1, para2) {
+        // 如果第一段以句子结束标点结尾，通常不合并
+        if (/[。！？.!?"'」』）)]$/.test(para1)) {
+            return false;
+        }
+        
+        // 如果第二段像是新段落的开始，不合并
+        if (/^(第[一二三四五六七八九十百千\d]+[章节回]|Chapter\s+\d+|\d+\.\s|[•·\-\*●])/i.test(para2)) {
+            return false;
+        }
+        
+        // 如果第一段以连接性标点结尾，应该合并
+        if (/[，,、；;：:\-—]$/.test(para1)) {
+            return true;
+        }
+        
+        // 如果第一段不以任何标点结尾，可能是被截断的
+        if (!/[。！？.!?，,、；;：:"'」』）)]$/.test(para1)) {
+            return true;
+        }
+        
+        return false;
     }
 
     async generateEPUB() {
@@ -749,6 +1095,7 @@ ${spine.map(s => '    ' + s).join('\n')}
         this.preserveLinks.checked = true;
         this.generateToc.checked = true;
         this.splitChapters.checked = true;
+        this.smartParagraph.checked = true;
     }
 
     // Utility methods
