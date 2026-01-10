@@ -582,6 +582,11 @@ class PDFToEPUBConverter {
         
         const prevText = prevLine.text;
         
+        // 如果前一行是章节标题，不合并（章节标题应该独立成行）
+        if (this.looksLikeTitle(prevText, prevLine)) {
+            return false;
+        }
+        
         // 如果当前行看起来是新段落的开始，不合并
         if (this.looksLikeNewParagraph(text, currentLine, prevLine)) {
             return false;
@@ -628,6 +633,11 @@ class PDFToEPUBConverter {
             return true;
         }
         
+        // 两位数字编号标题模式 (如 01 02 03)
+        if (/^\d{2}(\s+.*)?$/.test(text) && text.length < 50) {
+            return true;
+        }
+        
         // 列表项
         if (/^[•·\-\*●○◆◇▪▫]\s/.test(text) || /^\d+[.、)）]\s/.test(text)) {
             return true;
@@ -663,8 +673,13 @@ class PDFToEPUBConverter {
             return true;
         }
         
-        // 数字编号标题
+        // 数字编号标题 (如 1. 2. 或 1.1 等)
         if (/^\d+(\.\d+)*\s+.+$/.test(text) && text.length < 40) {
+            return true;
+        }
+        
+        // 两位数字编号标题 (如 01 02 03)
+        if (/^\d{2}(\s+.*)?$/.test(text) && text.length < 40) {
             return true;
         }
         
