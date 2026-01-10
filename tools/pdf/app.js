@@ -913,7 +913,13 @@ class PDFToEPUBConverter {
             // 判断是否应该合并
             const sentenceEnd = /[。！？.!?"'」』）)]$/;
             
-            if (!sentenceEnd.test(prevLine) && !this.looksLikeNewParagraph(currentLine, {x: 0}, {x: 0})) {
+            // 如果前一行是章节标题，不合并
+            const prevIsTitle = this.looksLikeTitle(prevLine, {});
+            
+            // 如果当前行是新段落开始（包括章节标题），不合并
+            const currentIsNewPara = this.looksLikeNewParagraph(currentLine, {x: 0}, {x: 0});
+            
+            if (!sentenceEnd.test(prevLine) && !prevIsTitle && !currentIsNewPara) {
                 // 合并行
                 const needsSpace = this.needsSpaceBetween(result, currentLine);
                 result += (needsSpace ? ' ' : '') + currentLine;
@@ -935,7 +941,12 @@ class PDFToEPUBConverter {
         }
         
         // 如果第二段像是新段落的开始，不合并
-        if (/^(第[一二三四五六七八九十百千\d]+[章节回]|Chapter\s+\d+|\d+\.\s|[•·\-\*●])/i.test(para2)) {
+        if (/^(第[一二三四五六七八九十百千\d]+[章节回]|Chapter\s+\d+|\d+\.\s|[•·\-\*●]|\d{2}[\s\-－])/i.test(para2)) {
+            return false;
+        }
+        
+        // 如果第一段是章节标题（两位数字格式），不合并
+        if (/^\d{2}[\s\-－]/.test(para1)) {
             return false;
         }
         
