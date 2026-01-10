@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 转 EPUB 工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 PDF 转 EPUB 工具</h1>
+            <p class="subtitle">将 PDF 文档转换为 EPUB 电子书格式</p>
+        </header>
+
+        <main>
+            <!-- 上传区域 -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <h3>拖拽 PDF 文件到此处</h3>
+                    <p>或者点击选择文件</p>
+                    <input type="file" id="fileInput" accept=".pdf" hidden>
+                    <button class="btn btn-primary" id="selectFileBtn">选择 PDF 文件</button>
+                </div>
+                <div class="file-info" id="fileInfo" hidden>
+                    <div class="file-icon">📕</div>
+                    <div class="file-details">
+                        <span class="file-name" id="fileName"></span>
+                        <span class="file-size" id="fileSize"></span>
+                    </div>
+                    <button class="btn btn-secondary" id="removeFileBtn">移除</button>
+                </div>
+            </section>
+
+            <!-- 转换设置 -->
+            <section class="settings-section" id="settingsSection" hidden>
+                <h2>📝 电子书设置</h2>
+                
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="bookTitle">书名 *</label>
+                        <input type="text" id="bookTitle" placeholder="请输入书名" required>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="bookAuthor">作者</label>
+                        <input type="text" id="bookAuthor" placeholder="请输入作者名">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="bookLanguage">语言</label>
+                        <select id="bookLanguage">
+                            <option value="zh-CN">简体中文</option>
+                            <option value="zh-TW">繁体中文</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="bookPublisher">出版社</label>
+                        <input type="text" id="bookPublisher" placeholder="请输入出版社">
+                    </div>
+                    
+                    <div class="setting-group full-width">
+                        <label for="bookDescription">简介</label>
+                        <textarea id="bookDescription" rows="3" placeholder="请输入书籍简介"></textarea>
+                    </div>
+                </div>
+
+                <div class="options-section">
+                    <h3>转换选项</h3>
+                    <div class="options-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="extractImages" checked>
+                            <span>提取图片</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="preserveLinks" checked>
+                            <span>保留链接</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="generateToc" checked>
+                            <span>生成目录</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="splitChapters" checked>
+                            <span>自动分章</span>
+                        </label>
+                    </div>
+                    
+                    <div class="advanced-options">
+                        <div class="setting-group">
+                            <label for="fontSize">基础字号</label>
+                            <select id="fontSize">
+                                <option value="14">14px (小)</option>
+                                <option value="16" selected>16px (中)</option>
+                                <option value="18">18px (大)</option>
+                                <option value="20">20px (特大)</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label for="chapterPattern">章节识别模式</label>
+                            <select id="chapterPattern">
+                                <option value="auto">自动识别</option>
+                                <option value="chinese">中文章节 (第X章)</option>
+                                <option value="english">英文章节 (Chapter X)</option>
+                                <option value="number">数字编号 (1. 2. 3.)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="previewBtn">预览内容</button>
+                    <button class="btn btn-primary" id="convertBtn">开始转换</button>
+                </div>
+            </section>
+
+            <!-- 进度显示 -->
+            <section class="progress-section" id="progressSection" hidden>
+                <h2>⏳ 转换中...</h2>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+                <p class="progress-status" id="progressStatus">正在初始化...</p>
+                <div class="progress-details" id="progressDetails"></div>
+            </section>
+
+            <!-- 预览区域 -->
+            <section class="preview-section" id="previewSection" hidden>
+                <div class="preview-header">
+                    <h2>📖 内容预览</h2>
+                    <button class="btn btn-secondary" id="closePreviewBtn">关闭预览</button>
+                </div>
+                <div class="preview-content" id="previewContent"></div>
+            </section>
+
+            <!-- 完成区域 -->
+            <section class="complete-section" id="completeSection" hidden>
+                <div class="success-icon">✅</div>
+                <h2>转换完成！</h2>
+                <div class="result-info">
+                    <p>文件名：<span id="resultFileName"></span></p>
+                    <p>文件大小：<span id="resultFileSize"></span></p>
+                    <p>章节数：<span id="resultChapters"></span></p>
+                    <p>图片数：<span id="resultImages"></span></p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="downloadBtn">下载 EPUB</button>
+                    <button class="btn btn-secondary" id="convertAnotherBtn">转换另一个文件</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>💡 提示：EPUB 格式兼容大多数电子书阅读器，如 Apple Books、Kobo、Calibre 等</p>
+        </footer>
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="toast" id="toast" hidden>
+        <span class="toast-icon" id="toastIcon">⚠️</span>
+        <span class="toast-message" id="toastMessage"></span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
