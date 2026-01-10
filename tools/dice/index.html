@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 骰子决策器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部控制栏 -->
+        <header class="control-bar">
+            <h1>🎲 骰子决策器</h1>
+            <div class="dice-controls">
+                <button class="btn btn-remove" id="removeDice" title="减少骰子">
+                    <span>−</span>
+                </button>
+                <span class="dice-count" id="diceCount">1</span>
+                <button class="btn btn-add" id="addDice" title="增加骰子">
+                    <span>+</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 骰子投掷区 -->
+        <main class="dice-arena" id="diceArena">
+            <div class="arena-glow"></div>
+            <div class="dice-container" id="diceContainer">
+                <!-- 骰子会在这里动态生成 -->
+            </div>
+            <button class="roll-button" id="rollButton">
+                <span class="roll-icon">🎲</span>
+                <span class="roll-text">投掷</span>
+            </button>
+        </main>
+
+        <!-- 结果显示区 -->
+        <section class="result-section">
+            <div class="result-display">
+                <div class="total-points">
+                    <span class="label">总点数</span>
+                    <span class="value" id="totalPoints">-</span>
+                </div>
+                <div class="decision-result">
+                    <span class="label">决策结果</span>
+                    <span class="value" id="decisionResult">点击投掷开始</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 点数范围提示 -->
+        <div class="range-hint" id="rangeHint">
+            点数范围: 1 - 6
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>⚙️ 点数决策设置</h2>
+                <button class="close-btn" id="closeSettings">×</button>
+            </div>
+            <div class="settings-body">
+                <div class="range-editor">
+                    <div class="range-track" id="rangeTrack">
+                        <!-- 动态生成范围区间 -->
+                    </div>
+                    <div class="range-scale" id="rangeScale">
+                        <!-- 刻度线 -->
+                    </div>
+                </div>
+                <div class="decision-editor" id="decisionEditor">
+                    <!-- 决策输入区 -->
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button class="btn btn-add-range" id="addRange">+ 添加区间</button>
+                <button class="btn btn-remove-range" id="removeRange">− 删除区间</button>
+            </div>
+            <div class="settings-footer">
+                <button class="btn btn-save" id="saveSettings">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音效提示 -->
+    <div class="sound-notice" id="soundNotice">
+        🔊 点击任意位置启用音效
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
