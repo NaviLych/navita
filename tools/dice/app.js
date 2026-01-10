@@ -108,6 +108,13 @@ class DiceApp {
                 this.closeSettings();
             }
         });
+
+        // 窗口尺寸变化时重新渲染设置面板
+        window.addEventListener('resize', () => {
+            if (this.settingsOverlay.classList.contains('active')) {
+                this.renderSettingsPanel();
+            }
+        });
     }
 
     // 启用音频
@@ -347,17 +354,32 @@ class DiceApp {
     renderRangeTrack() {
         this.rangeTrack.innerHTML = '';
         
-        let currentTop = 0;
+        // 检测是否是移动端（横向布局）
+        const isMobile = window.innerWidth <= 768;
+        let currentPos = 0;
 
         this.tempRanges.forEach((range, index) => {
             const rangeSize = range.max - range.min + 1;
-            const heightPercent = (rangeSize / 6) * 100;
+            const sizePercent = (rangeSize / 6) * 100;
             
             // 创建区间块
             const segment = document.createElement('div');
             segment.className = `range-segment ${index === this.activeRangeIndex ? 'active' : ''}`;
-            segment.style.top = `${currentTop}%`;
-            segment.style.height = `${heightPercent}%`;
+            
+            if (isMobile) {
+                // 横向布局
+                segment.style.left = `${currentPos}%`;
+                segment.style.width = `${sizePercent}%`;
+                segment.style.top = '0';
+                segment.style.height = '100%';
+            } else {
+                // 纵向布局
+                segment.style.top = `${currentPos}%`;
+                segment.style.height = `${sizePercent}%`;
+                segment.style.left = '0';
+                segment.style.width = '100%';
+            }
+            
             segment.style.background = this.colors[index % this.colors.length];
             segment.dataset.index = index;
             
@@ -377,44 +399,58 @@ class DiceApp {
             if (index < this.tempRanges.length - 1) {
                 const divider = document.createElement('div');
                 divider.className = 'range-divider';
-                divider.style.top = `calc(${currentTop + heightPercent}% - 10px)`;
+                
+                if (isMobile) {
+                    divider.style.left = `calc(${currentPos + sizePercent}% - 12px)`;
+                    divider.style.top = '-5px';
+                } else {
+                    divider.style.top = `calc(${currentPos + sizePercent}% - 10px)`;
+                    divider.style.left = '-5px';
+                }
+                
                 divider.dataset.index = index;
                 
-                this.setupDividerDrag(divider, index);
+                this.setupDividerDrag(divider, index, isMobile);
                 this.rangeTrack.appendChild(divider);
             }
             
-            currentTop += heightPercent;
+            currentPos += sizePercent;
         });
     }
 
     // 设置分隔线拖拽
-    setupDividerDrag(divider, index) {
-        let startY, startTop, lastPoint;
+    setupDividerDrag(divider, index, isMobile) {
+        let startPos, lastPoint;
         let isDragging = false;
 
         const onStart = (e) => {
             e.preventDefault();
             isDragging = true;
-            startY = e.clientY || e.touches?.[0]?.clientY;
-            startTop = parseFloat(divider.style.top);
+            startPos = isMobile 
+                ? (e.clientX || e.touches?.[0]?.clientX)
+                : (e.clientY || e.touches?.[0]?.clientY);
             lastPoint = this.tempRanges[index].max;
             divider.classList.add('dragging');
-            document.body.style.cursor = 'ns-resize';
+            document.body.style.cursor = isMobile ? 'ew-resize' : 'ns-resize';
             document.body.style.userSelect = 'none';
         };
 
         const onMove = (e) => {
             if (!isDragging) return;
             
-            const clientY = e.clientY || e.touches?.[0]?.clientY;
             const trackRect = this.rangeTrack.getBoundingClientRect();
+            let relativePos;
             
-            // 计算在轨道中的相对位置（0-1）
-            const relativeY = (clientY - trackRect.top) / trackRect.height;
+            if (isMobile) {
+                const clientX = e.clientX || e.touches?.[0]?.clientX;
+                relativePos = (clientX - trackRect.left) / trackRect.width;
+            } else {
+                const clientY = e.clientY || e.touches?.[0]?.clientY;
+                relativePos = (clientY - trackRect.top) / trackRect.height;
+            }
             
             // 转换为点数（1-6）
-            let newPoint = Math.round(relativeY * 6);
+            let newPoint = Math.round(relativePos * 6);
             newPoint = Math.max(this.tempRanges[index].min, Math.min(this.tempRanges[index + 1].max - 1, newPoint));
             
             if (newPoint !== lastPoint && newPoint >= 1 && newPoint <= 5) {

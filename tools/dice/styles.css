@@ -22,8 +22,12 @@ body {
     font-family: 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
     min-height: 100vh;
+    min-height: 100dvh;
     color: var(--text-primary);
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 
 /* 应用容器 */
@@ -31,9 +35,12 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100dvh;
     max-width: 600px;
     margin: 0 auto;
     padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 
 /* 顶部控制栏 */
@@ -351,15 +358,22 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+}
+
+@media (min-width: 769px) {
+    .settings-overlay {
+        align-items: center;
+    }
 }
 
 .settings-overlay.active {
@@ -368,21 +382,40 @@ body {
 }
 
 .settings-panel {
-    width: 90%;
+    width: 100%;
     max-width: 600px;
-    max-height: 85vh;
+    max-height: 92vh;
+    max-height: 92dvh;
     background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
-    border-radius: 24px;
+    border-radius: 24px 24px 0 0;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    transform: translateY(20px) scale(0.95);
+    border-bottom: none;
+    box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.5);
+    transform: translateY(100%);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 769px) {
+    .settings-panel {
+        width: 90%;
+        border-radius: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        transform: translateY(20px) scale(0.95);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
 }
 
 .settings-overlay.active .settings-panel {
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
+}
+
+@media (min-width: 769px) {
+    .settings-overlay.active .settings-panel {
+        transform: translateY(0) scale(1);
+    }
 }
 
 .settings-header {
@@ -391,6 +424,26 @@ body {
     align-items: center;
     padding: 20px 25px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+/* 移动端拖拽提示条 */
+.settings-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+@media (min-width: 769px) {
+    .settings-header::before {
+        display: none;
+    }
 }
 
 .settings-header h2 {
@@ -399,8 +452,8 @@ body {
 }
 
 .close-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border: none;
     background: rgba(255, 255, 255, 0.1);
     color: white;
@@ -408,6 +461,9 @@ body {
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .close-btn:hover {
@@ -780,34 +836,177 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* 响应式适配 */
+/* 响应式适配 - 平板 */
+@media (max-width: 768px) {
+    .settings-body {
+        flex-direction: column;
+        gap: 15px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .range-editor {
+        flex-direction: column;
+        min-width: 100%;
+        width: 100%;
+        height: 90px;
+        min-height: 90px;
+    }
+
+    .range-track {
+        width: 100%;
+        height: 55px;
+        min-height: 55px;
+        border-radius: 28px;
+    }
+
+    .range-segment {
+        height: 100% !important;
+        top: 0 !important;
+    }
+
+    .segment-label {
+        writing-mode: horizontal-tb;
+        text-orientation: mixed;
+        max-width: 80%;
+        max-height: none;
+    }
+
+    .range-scale {
+        flex-direction: row;
+        height: auto;
+        min-height: auto;
+        width: 100%;
+        padding: 5px 10px;
+    }
+
+    .scale-mark {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .scale-mark .tick {
+        width: 2px;
+        height: 12px;
+    }
+
+    .scale-mark.major .tick {
+        height: 18px;
+        width: 2px;
+    }
+
+    .range-divider {
+        left: auto;
+        top: -5px !important;
+        width: 20px;
+        height: 60px;
+        cursor: ew-resize;
+    }
+
+    .range-divider::before {
+        width: 6px;
+        height: 40px;
+    }
+
+    .decision-editor {
+        max-height: 200px;
+    }
+}
+
+/* 响应式适配 - 手机 */
 @media (max-width: 480px) {
     .app-container {
-        padding: 15px;
+        padding: 12px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+
+    .control-bar {
+        padding: 12px 15px;
+        border-radius: 14px;
+        margin-bottom: 15px;
     }
 
     .control-bar h1 {
         font-size: 1.1rem;
     }
 
+    .dice-controls {
+        gap: 12px;
+    }
+
+    .btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        font-size: 1.6rem;
+    }
+
+    .dice-count {
+        font-size: 1.6rem;
+        min-width: 35px;
+    }
+
+    .dice-arena {
+        min-height: 280px;
+        border-radius: 20px;
+        margin-bottom: 15px;
+    }
+
+    .dice-container {
+        gap: 15px;
+        padding: 20px;
+    }
+
     .dice {
-        width: 55px;
-        height: 55px;
+        width: 60px;
+        height: 60px;
     }
 
     .dice-face {
-        width: 55px;
-        height: 55px;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
     }
 
     .dice-dots {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
+        gap: 3px;
     }
 
     .dot {
         width: 10px;
         height: 10px;
+    }
+
+    .roll-button {
+        padding: 14px 35px;
+        font-size: 1.1rem;
+        border-radius: 45px;
+        bottom: 20px;
+        min-height: 52px;
+    }
+
+    .roll-icon {
+        font-size: 1.3rem;
+    }
+
+    .result-section {
+        padding: 20px 15px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+    }
+
+    .result-display {
+        gap: 15px;
+    }
+
+    .result-display .label {
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
     }
 
     .total-points .value {
@@ -816,5 +1015,340 @@ body {
 
     .decision-result .value {
         font-size: 1.1rem;
+    }
+
+    .range-hint {
+        font-size: 0.85rem;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    /* 设置面板移动端优化 */
+    .settings-panel {
+        width: 100%;
+        max-height: 90vh;
+        max-height: 90dvh;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .settings-header {
+        padding: 20px 18px 16px;
+    }
+
+    .settings-header h2 {
+        font-size: 1.15rem;
+    }
+
+    .close-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.6rem;
+    }
+
+    .settings-body {
+        padding: 15px;
+        gap: 15px;
+        flex-direction: column;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .range-editor {
+        height: 80px;
+        min-height: 80px;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .range-track {
+        height: 50px;
+        min-height: 50px;
+        width: 100%;
+        border-radius: 25px;
+    }
+
+    .range-scale {
+        flex-direction: row;
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        padding: 8px 15px;
+    }
+
+    .scale-mark {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .scale-mark .tick {
+        width: 2px;
+        height: 10px;
+    }
+
+    .scale-mark.major .tick {
+        height: 14px;
+        width: 2px;
+    }
+
+    .segment-label {
+        writing-mode: horizontal-tb;
+        text-orientation: mixed;
+        max-width: 90%;
+        max-height: none;
+        font-size: 0.7rem;
+    }
+
+    .range-segment {
+        height: 100% !important;
+        top: 0 !important;
+    }
+
+    .range-divider {
+        top: -5px !important;
+        width: 24px;
+        height: 60px;
+        cursor: ew-resize;
+    }
+
+    .range-divider::before {
+        width: 6px;
+        height: 35px;
+    }
+
+    .decision-editor {
+        max-height: none;
+        flex: 1;
+        gap: 10px;
+        padding-right: 5px;
+        overflow-y: auto;
+    }
+
+    .decision-item {
+        padding: 14px 16px;
+        gap: 12px;
+        border-radius: 14px;
+        min-height: 60px;
+    }
+
+    .decision-color {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .decision-range {
+        min-width: 50px;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .decision-input {
+        padding: 12px 14px;
+        font-size: 16px; /* 防止iOS自动缩放 */
+        border-radius: 10px;
+        min-height: 48px;
+        flex: 1;
+    }
+
+    .settings-actions {
+        padding: 12px 15px;
+        gap: 10px;
+    }
+
+    .btn-add-range,
+    .btn-remove-range {
+        padding: 14px 10px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+        min-height: 52px;
+        font-weight: 600;
+    }
+
+    .settings-footer {
+        padding: 15px;
+        padding-bottom: max(20px, calc(env(safe-area-inset-bottom) + 10px));
+    }
+
+    .btn-save {
+        padding: 18px;
+        font-size: 1.05rem;
+        border-radius: 14px;
+        min-height: 56px;
+        font-weight: 600;
+    }
+
+    .sound-notice {
+        bottom: max(15px, calc(env(safe-area-inset-bottom) + 10px));
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+}
+
+/* 小屏手机适配 */
+@media (max-width: 360px) {
+    .app-container {
+        padding: 10px;
+    }
+
+    .control-bar h1 {
+        font-size: 1rem;
+    }
+
+    .dice {
+        width: 52px;
+        height: 52px;
+    }
+
+    .dice-face {
+        width: 52px;
+        height: 52px;
+    }
+
+    .dice-dots {
+        width: 38px;
+        height: 38px;
+    }
+
+    .dot {
+        width: 9px;
+        height: 9px;
+    }
+
+    .dice-container {
+        gap: 12px;
+    }
+
+    .roll-button {
+        padding: 12px 28px;
+        font-size: 1rem;
+    }
+
+    .total-points .value {
+        font-size: 2.2rem;
+    }
+
+    .decision-result .value {
+        font-size: 1rem;
+    }
+
+    .decision-range {
+        min-width: 45px;
+        font-size: 0.8rem;
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 15px;
+        max-width: 100%;
+        padding: 10px 20px;
+    }
+
+    .control-bar {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .dice-arena {
+        flex: 1;
+        min-height: 200px;
+        min-width: 250px;
+    }
+
+    .result-section {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 0;
+    }
+
+    .range-hint {
+        width: 100%;
+    }
+
+    .roll-button {
+        bottom: 15px;
+        padding: 10px 25px;
+        font-size: 1rem;
+    }
+
+    .settings-panel {
+        max-height: 95vh;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .settings-header {
+        width: 100%;
+    }
+
+    .settings-body {
+        flex-direction: row;
+        flex: 1;
+    }
+
+    .range-editor {
+        flex-direction: column;
+        min-width: 100px;
+        height: auto;
+    }
+
+    .range-track {
+        width: 50px;
+        height: 100%;
+        min-height: 150px;
+        flex-direction: column;
+    }
+
+    .range-scale {
+        flex-direction: column;
+        height: 100%;
+        min-height: 150px;
+    }
+
+    .decision-editor {
+        max-height: none;
+        flex: 1;
+    }
+
+    .settings-actions,
+    .settings-footer {
+        width: 100%;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .btn:active {
+        transform: scale(0.92);
+    }
+
+    .roll-button:active {
+        transform: scale(0.95);
+    }
+
+    .dice:active {
+        transform: scale(1.05);
+    }
+
+    .decision-item:active {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* 移除悬停效果，改用更好的触摸反馈 */
+    .btn-add:hover,
+    .btn-remove:hover,
+    .btn-add-range:hover,
+    .btn-remove-range:hover,
+    .btn-save:hover,
+    .roll-button:hover {
+        transform: none;
+    }
+
+    .decision-item:hover {
+        transform: none;
     }
 }
