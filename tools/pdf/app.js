@@ -48,6 +48,7 @@ class PDFToEPUBConverter {
         this.smartParagraph = document.getElementById('smartParagraph');
         this.fontSize = document.getElementById('fontSize');
         this.chapterPattern = document.getElementById('chapterPattern');
+        this.customChapters = document.getElementById('customChapters');
 
         // Buttons
         this.previewBtn = document.getElementById('previewBtn');
@@ -253,11 +254,19 @@ class PDFToEPUBConverter {
                 return !isPageInfo(title);
             });
             
-            if (filteredMatches.length > 0) {
+            // 合并自定义章节标题匹配
+            const customMatches = this.getCustomChapterMatches(allText);
+            const allMatches = [...filteredMatches, ...customMatches];
+            
+            // 按位置排序并去重
+            allMatches.sort((a, b) => a.index - b.index);
+            const uniqueMatches = this.deduplicateMatches(allMatches);
+            
+            if (uniqueMatches.length > 0) {
                 this.extractedContent.chapters = [];
                 
                 // 检查第一个章节之前是否有内容，如果有则作为“前言”
-                const firstMatchIndex = filteredMatches[0].index;
+                const firstMatchIndex = uniqueMatches[0].index;
                 if (firstMatchIndex > 0) {
                     const prefaceContent = allText.substring(0, firstMatchIndex).trim();
                     // 只有当前言内容超过100个字符时才添加
@@ -270,11 +279,11 @@ class PDFToEPUBConverter {
                     }
                 }
                 
-                for (let i = 0; i < filteredMatches.length; i++) {
-                    const match = filteredMatches[i];
+                for (let i = 0; i < uniqueMatches.length; i++) {
+                    const match = uniqueMatches[i];
                     const title = match[1].trim();
                     const startIndex = match.index + match[0].length;
-                    const endIndex = filteredMatches[i + 1] ? filteredMatches[i + 1].index : allText.length;
+                    const endIndex = uniqueMatches[i + 1] ? uniqueMatches[i + 1].index : allText.length;
                     const content = allText.substring(startIndex, endIndex).trim();
                     
                     this.extractedContent.chapters.push({
@@ -288,7 +297,39 @@ class PDFToEPUBConverter {
                 this.createDefaultChaptersForPreview(allText);
             }
         } else {
-            this.createDefaultChaptersForPreview(allText);
+            // 即使未启用自动分章，也检查自定义章节
+            const customMatches = this.getCustomChapterMatches(allText);
+            if (customMatches.length > 0) {
+                this.extractedContent.chapters = [];
+                
+                const firstMatchIndex = customMatches[0].index;
+                if (firstMatchIndex > 0) {
+                    const prefaceContent = allText.substring(0, firstMatchIndex).trim();
+                    if (prefaceContent.length > 100) {
+                        this.extractedContent.chapters.push({
+                            title: '前言',
+                            content: prefaceContent,
+                            id: 'chapter_preface'
+                        });
+                    }
+                }
+                
+                for (let i = 0; i < customMatches.length; i++) {
+                    const match = customMatches[i];
+                    const title = match[1].trim();
+                    const startIndex = match.index + match[0].length;
+                    const endIndex = customMatches[i + 1] ? customMatches[i + 1].index : allText.length;
+                    const content = allText.substring(startIndex, endIndex).trim();
+                    
+                    this.extractedContent.chapters.push({
+                        title,
+                        content,
+                        id: `chapter_${i + 1}`
+                    });
+                }
+            } else {
+                this.createDefaultChaptersForPreview(allText);
+            }
         }
     }
     
@@ -573,11 +614,19 @@ class PDFToEPUBConverter {
                 return !isPageInfo(title);
             });
             
-            if (filteredMatches.length > 0) {
+            // 合并自定义章节标题匹配
+            const customMatches = this.getCustomChapterMatches(allText);
+            const allMatches = [...filteredMatches, ...customMatches];
+            
+            // 按位置排序并去重
+            allMatches.sort((a, b) => a.index - b.index);
+            const uniqueMatches = this.deduplicateMatches(allMatches);
+            
+            if (uniqueMatches.length > 0) {
                 this.extractedContent.chapters = [];
                 
                 // 检查第一个章节之前是否有内容，如果有则作为“前言”
-                const firstMatchIndex = filteredMatches[0].index;
+                const firstMatchIndex = uniqueMatches[0].index;
                 if (firstMatchIndex > 0) {
                     const prefaceContent = allText.substring(0, firstMatchIndex).trim();
                     // 只有当前言内容超过100个字符时才添加
@@ -591,11 +640,11 @@ class PDFToEPUBConverter {
                     }
                 }
                 
-                for (let i = 0; i < filteredMatches.length; i++) {
-                    const match = filteredMatches[i];
+                for (let i = 0; i < uniqueMatches.length; i++) {
+                    const match = uniqueMatches[i];
                     const title = match[1].trim();
                     const startIndex = match.index + match[0].length;
-                    const endIndex = filteredMatches[i + 1] ? filteredMatches[i + 1].index : allText.length;
+                    const endIndex = uniqueMatches[i + 1] ? uniqueMatches[i + 1].index : allText.length;
                     const content = allText.substring(startIndex, endIndex).trim();
                     
                     this.extractedContent.chapters.push({
@@ -605,13 +654,57 @@ class PDFToEPUBConverter {
                     });
                 }
                 
-                this.addProgressDetail(`✓ 识别到 ${this.extractedContent.chapters.length} 个章节`);
+                // 统计自动识别和自定义章节数量
+                const customCount = uniqueMatches.filter(m => m.isCustom).length;
+                const autoCount = uniqueMatches.length - customCount;
+                if (customCount > 0 && autoCount > 0) {
+                    this.addProgressDetail(`✓ 识别到 ${autoCount} 个自动章节 + ${customCount} 个自定义章节`);
+                } else if (customCount > 0) {
+                    this.addProgressDetail(`✓ 识别到 ${customCount} 个自定义章节`);
+                } else {
+                    this.addProgressDetail(`✓ 识别到 ${this.extractedContent.chapters.length} 个章节`);
+                }
             } else {
                 // No chapters found, create one chapter per page or group of pages
                 this.createDefaultChapters();
             }
         } else {
-            this.createDefaultChapters();
+            // 即使未启用自动分章，也检查自定义章节
+            const customMatches = this.getCustomChapterMatches(allText);
+            if (customMatches.length > 0) {
+                this.extractedContent.chapters = [];
+                
+                const firstMatchIndex = customMatches[0].index;
+                if (firstMatchIndex > 0) {
+                    const prefaceContent = allText.substring(0, firstMatchIndex).trim();
+                    if (prefaceContent.length > 100) {
+                        this.extractedContent.chapters.push({
+                            title: '前言',
+                            content: prefaceContent,
+                            id: 'chapter_preface'
+                        });
+                        this.addProgressDetail(`✓ 识别到前言内容`);
+                    }
+                }
+                
+                for (let i = 0; i < customMatches.length; i++) {
+                    const match = customMatches[i];
+                    const title = match[1].trim();
+                    const startIndex = match.index + match[0].length;
+                    const endIndex = customMatches[i + 1] ? customMatches[i + 1].index : allText.length;
+                    const content = allText.substring(startIndex, endIndex).trim();
+                    
+                    this.extractedContent.chapters.push({
+                        title,
+                        content,
+                        id: `chapter_${i + 1}`
+                    });
+                }
+                
+                this.addProgressDetail(`✓ 识别到 ${customMatches.length} 个自定义章节`);
+            } else {
+                this.createDefaultChapters();
+            }
         }
     }
 
@@ -636,6 +729,73 @@ class PDFToEPUBConverter {
         }
         
         this.addProgressDetail(`✓ 创建了 ${this.extractedContent.chapters.length} 个默认章节（未识别到指定格式的章节标题）`);
+    }
+
+    /**
+     * 获取自定义章节标题的匹配结果
+     * @param {string} allText - 全部文本内容
+     * @returns {Array} - 匹配结果数组，格式与正则匹配结果兼容
+     */
+    getCustomChapterMatches(allText) {
+        const customChaptersText = this.customChapters?.value?.trim();
+        if (!customChaptersText) return [];
+        
+        const customTitles = customChaptersText
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        
+        if (customTitles.length === 0) return [];
+        
+        const matches = [];
+        
+        for (const title of customTitles) {
+            // 转义正则特殊字符
+            const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // 创建匹配行首或段落开始的标题的正则
+            const regex = new RegExp(`^(${escapedTitle})`, 'gm');
+            
+            let match;
+            while ((match = regex.exec(allText)) !== null) {
+                matches.push({
+                    0: match[0],
+                    1: match[1],
+                    index: match.index,
+                    isCustom: true  // 标记为自定义章节
+                });
+            }
+        }
+        
+        return matches;
+    }
+
+    /**
+     * 去除重叠的匹配项（优先保留自定义章节）
+     * @param {Array} matches - 已排序的匹配数组
+     * @returns {Array} - 去重后的匹配数组
+     */
+    deduplicateMatches(matches) {
+        if (matches.length <= 1) return matches;
+        
+        const result = [];
+        let lastEndIndex = -1;
+        
+        for (const match of matches) {
+            // 如果当前匹配与上一个匹配重叠（位置差距小于50字符），跳过
+            if (match.index < lastEndIndex + 50) {
+                // 如果当前是自定义章节而上一个不是，替换上一个
+                if (match.isCustom && result.length > 0 && !result[result.length - 1].isCustom) {
+                    result[result.length - 1] = match;
+                    lastEndIndex = match.index + match[0].length;
+                }
+                continue;
+            }
+            
+            result.push(match);
+            lastEndIndex = match.index + match[0].length;
+        }
+        
+        return result;
     }
 
     /**
@@ -1276,6 +1436,7 @@ ${spine.map(s => '    ' + s).join('\n')}
         this.bookAuthor.value = '';
         this.bookPublisher.value = '';
         this.bookDescription.value = '';
+        this.customChapters.value = '';
         this.extractImages.checked = true;
         this.preserveLinks.checked = true;
         this.generateToc.checked = true;

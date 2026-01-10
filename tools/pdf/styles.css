@@ -277,6 +277,49 @@ section h3 {
     border-top: 1px solid var(--border);
 }
 
+/* Custom Chapters Section */
+.custom-chapters-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.custom-chapters-section label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.custom-chapters-section .label-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+.custom-chapters-section textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    min-height: 100px;
+    transition: var(--transition);
+}
+
+.custom-chapters-section textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.custom-chapters-section textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
 /* Action Buttons */
 .action-buttons {
     display: flex;
