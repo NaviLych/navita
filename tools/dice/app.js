@@ -2,7 +2,7 @@
 class DiceApp {
     constructor() {
         this.diceCount = 1;
-        this.maxDice = 6;
+        this.maxDice = 10;
         this.minDice = 1;
         this.isRolling = false;
         this.audioContext = null;
