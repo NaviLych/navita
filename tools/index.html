@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tools-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .tool-card:active {
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .tool-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .tool-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: white;
+            text-align: center;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 30px;
+            }
+
+            .tool-card {
+                padding: 20px;
+            }
+
+            .tool-icon {
+                font-size: 2rem;
+            }
+
+            .tool-title {
+                font-size: 1.1rem;
+            }
+
+            .tool-description {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tool-card:nth-child(3) {
+                grid-column: 1 / -1;
+                max-width: calc(50% - 10px);
+                margin: 0 auto;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 工具导航</h1>
+        
+        <div class="tools-grid">
+            <a href="epub/index.html" class="tool-card">
+                <div class="tool-icon">📚</div>
+                <div class="tool-title">EPUB 拆分工具</div>
+                <div class="tool-description">将大型 EPUB 文件拆分为多个小文件，便于管理和阅读</div>
+            </a>
+
+            <a href="pdf/index.html" class="tool-card">
+                <div class="tool-icon">📄</div>
+                <div class="tool-title">PDF 转 EPUB</div>
+                <div class="tool-description">将 PDF 文档转换为 EPUB 格式，优化阅读体验</div>
+            </a>
+
+            <a href="dice/index.html" class="tool-card">
+                <div class="tool-icon">🎲</div>
+                <div class="tool-title">骰子</div>
+                <div class="tool-description">在线投掷骰子，支持多种骰子类型</div>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>选择一个工具开始使用</p>
+        </div>
+    </div>
+</body>
+</html>
