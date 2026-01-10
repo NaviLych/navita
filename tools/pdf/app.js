@@ -418,8 +418,12 @@ class PDFToEPUBConverter {
             case 'number':
                 chapterRegex = /^(\d+\.\s+.*?)$/gm;
                 break;
+            case 'padded':
+                // 匹配两位数字开头的行，如 01 02 03，后面可以跟空格和标题文字
+                chapterRegex = /^(\d{2}(?:\s+.*)?)$/gm;
+                break;
             default: // auto
-                chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?|Chapter\s+\d+.*?|\d+\.\s+.{2,50})$/gim;
+                chapterRegex = /^(第[一二三四五六七八九十百千\d]+[章节回].*?|Chapter\s+\d+.*?|\d+\.\s+.{2,50}|\d{2}(?:\s+.{2,50})?)$/gim;
         }
 
         if (this.splitChapters.checked) {
