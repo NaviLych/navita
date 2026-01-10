@@ -752,15 +752,18 @@ class PDFToEPUBConverter {
         for (const title of customTitles) {
             // 转义正则特殊字符
             const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // 创建匹配行首或段落开始的标题的正则
-            const regex = new RegExp(`^(${escapedTitle})`, 'gm');
+            // 创建更灵活的正则：匹配行首、或者在换行/空白/数字/标点后面的标题
+            // 使用捕获组来获取标题本身
+            const regex = new RegExp(`(?:^|[\\n\\r\\s\\d，。！？、；：""''（）【】｜|])+(${escapedTitle})`, 'gm');
             
             let match;
             while ((match = regex.exec(allText)) !== null) {
+                // 计算实际标题开始的位置（去掉前面的分隔符）
+                const titleStartIndex = match.index + match[0].length - match[1].length;
                 matches.push({
-                    0: match[0],
+                    0: match[1],  // 只保留标题本身
                     1: match[1],
-                    index: match.index,
+                    index: titleStartIndex,
                     isCustom: true  // 标记为自定义章节
                 });
             }
