@@ -351,6 +351,15 @@ section h3 {
     border-radius: var(--radius-sm);
 }
 
+.split-item.oversized {
+    border-left-color: var(--warning-color);
+}
+
+.split-item.oversized .split-size {
+    color: var(--warning-color);
+    background: rgba(245, 158, 11, 0.1);
+}
+
 /* Chapter List */
 .chapter-list-container {
     margin-bottom: 24px;

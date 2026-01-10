@@ -1,6 +1,7 @@
 /**
  * EPUB 拆分工具
  * 将大型 EPUB 文件按章节拆分为多个小文件
+ * 关键：追踪每个章节引用的资源，按累积大小拆分
  */
 
 class EPUBSplitter {
@@ -8,10 +9,12 @@ class EPUBSplitter {
         this.file = null;
         this.zip = null;
         this.metadata = {};
+        this.manifest = new Map();
         this.chapters = [];
-        this.resources = new Map(); // 资源文件映射
         this.splitPlan = [];
         this.resultFiles = [];
+        this.opfPath = '';
+        this.opfDir = '';
         
         this.initElements();
         this.bindEvents();
@@ -52,7 +55,7 @@ class EPUBSplitter {
         // Result elements
         this.resultSection = document.getElementById('resultSection');
         this.resultCount = document.getElementById('resultCount');
-        this.resultFiles = document.getElementById('resultFiles');
+        this.resultFilesEl = document.getElementById('resultFiles');
         this.downloadAllBtn = document.getElementById('downloadAllBtn');
         this.resetBtn = document.getElementById('resetBtn');
     }
@@ -136,6 +139,9 @@ class EPUBSplitter {
             // 解析 EPUB 结构
             await this.parseEPUBStructure();
 
+            // 解析每个章节引用的资源
+            await this.parseChapterResources();
+
             // 计算拆分计划
             this.calculateSplitPlan();
 
@@ -179,7 +185,6 @@ class EPUBSplitter {
         }
 
         const opfDoc = parser.parseFromString(opfContent, 'application/xml');
-        this.opfDoc = opfDoc;
 
         // 获取元数据
         this.parseMetadata(opfDoc);
@@ -194,13 +199,11 @@ class EPUBSplitter {
     parseMetadata(opfDoc) {
         const metadataEl = opfDoc.querySelector('metadata');
         
-        // 尝试多种方式获取标题
         let title = metadataEl?.querySelector('title')?.textContent;
         if (!title) {
             title = metadataEl?.querySelector('dc\\:title, [*|title]')?.textContent;
         }
         
-        // 尝试多种方式获取作者
         let author = metadataEl?.querySelector('creator')?.textContent;
         if (!author) {
             author = metadataEl?.querySelector('dc\\:creator, [*|creator]')?.textContent;
@@ -219,18 +222,13 @@ class EPUBSplitter {
         const items = manifestEl?.querySelectorAll('item') || [];
 
         this.manifest = new Map();
-        this.resources = new Map();
 
         for (const item of items) {
             const id = item.getAttribute('id');
-            const href = item.getAttribute('href');
+            const href = decodeURIComponent(item.getAttribute('href'));
             const mediaType = item.getAttribute('media-type');
+            const fullPath = this.opfDir + href;
 
-            // 解码 URL 编码的路径
-            const decodedHref = decodeURIComponent(href);
-            const fullPath = this.opfDir + decodedHref;
-
-            // 获取文件内容和大小
             const file = this.zip.file(fullPath);
             let size = 0;
             let content = null;
@@ -241,25 +239,17 @@ class EPUBSplitter {
                 content = data;
             }
 
+            const isContent = mediaType?.includes('xhtml') || mediaType?.includes('xml');
+
             this.manifest.set(id, {
                 id,
-                href: decodedHref,
+                href,
                 fullPath,
                 mediaType,
                 size,
-                content
+                content,
+                isContent
             });
-
-            // 非 spine 项目作为资源
-            if (!mediaType?.includes('xhtml') && !mediaType?.includes('xml')) {
-                this.resources.set(fullPath, {
-                    href: decodedHref,
-                    fullPath,
-                    mediaType,
-                    size,
-                    content
-                });
-            }
         }
     }
 
@@ -268,23 +258,22 @@ class EPUBSplitter {
         const itemrefs = spineEl?.querySelectorAll('itemref') || [];
 
         this.chapters = [];
-        let index = 0;
 
-        for (const itemref of itemrefs) {
-            const idref = itemref.getAttribute('idref');
+        for (let i = 0; i < itemrefs.length; i++) {
+            const idref = itemrefs[i].getAttribute('idref');
             const manifestItem = this.manifest.get(idref);
 
             if (manifestItem) {
-                index++;
                 this.chapters.push({
-                    index,
+                    index: i + 1,
                     id: idref,
                     href: manifestItem.href,
                     fullPath: manifestItem.fullPath,
                     mediaType: manifestItem.mediaType,
                     size: manifestItem.size,
                     content: manifestItem.content,
-                    title: this.extractChapterTitle(manifestItem.content) || `第 ${index} 章`
+                    title: this.extractChapterTitle(manifestItem.content) || `第 ${i + 1} 章`,
+                    usedResources: new Set() // 将在 parseChapterResources 中填充
                 });
             }
         }
@@ -298,13 +287,11 @@ class EPUBSplitter {
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'application/xhtml+xml');
             
-            // 尝试从 title 标签获取
             const titleEl = doc.querySelector('title');
             if (titleEl?.textContent?.trim()) {
                 return titleEl.textContent.trim();
             }
 
-            // 尝试从 h1, h2 标签获取
             const h1 = doc.querySelector('h1, h2, h3');
             if (h1?.textContent?.trim()) {
                 return h1.textContent.trim().substring(0, 50);
@@ -316,56 +303,135 @@ class EPUBSplitter {
         }
     }
 
+    async parseChapterResources() {
+        // 为每个章节解析引用的资源
+        for (const chapter of this.chapters) {
+            if (chapter.content) {
+                const text = new TextDecoder().decode(chapter.content);
+                const chapterDir = chapter.href.substring(0, chapter.href.lastIndexOf('/') + 1);
+                
+                // 找所有资源引用
+                const patterns = [
+                    /src=["']([^"']+)["']/gi,
+                    /href=["']([^"'#]+\.(?:css|jpg|jpeg|png|gif|svg|ttf|otf|woff|woff2|webp))["']/gi,
+                    /url\(["']?([^"')]+)["']?\)/gi
+                ];
+                
+                for (const pattern of patterns) {
+                    let match;
+                    while ((match = pattern.exec(text)) !== null) {
+                        let ref = match[1];
+                        if (ref.startsWith('http') || ref.startsWith('data:')) continue;
+                        
+                        // 规范化路径
+                        let resourceHref = this.resolveRelativePath(chapterDir, ref);
+                        
+                        // 在 manifest 中查找
+                        for (const [id, item] of this.manifest) {
+                            if (item.href === resourceHref || 
+                                item.href.endsWith('/' + resourceHref) || 
+                                resourceHref.endsWith(item.href) ||
+                                item.href === ref) {
+                                chapter.usedResources.add(id);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    resolveRelativePath(basePath, relativePath) {
+        if (relativePath.startsWith('/')) {
+            return relativePath.substring(1);
+        }
+        
+        const baseParts = basePath.split('/').filter(p => p);
+        const relParts = relativePath.split('/');
+        
+        for (const part of relParts) {
+            if (part === '..') {
+                baseParts.pop();
+            } else if (part !== '.' && part !== '') {
+                baseParts.push(part);
+            }
+        }
+        
+        return baseParts.join('/');
+    }
+
     calculateSplitPlan() {
         const targetBytes = this.targetSize.value * 1024 * 1024;
-        
-        // 计算共享资源的大小（如样式、字体、封面等）
-        let sharedResourcesSize = 0;
-        for (const resource of this.resources.values()) {
-            sharedResourcesSize += resource.size;
-        }
-
-        // 计算每个分卷的有效目标大小（扣除共享资源）
-        const effectiveTargetSize = Math.max(targetBytes - sharedResourcesSize, targetBytes * 0.5);
 
         this.splitPlan = [];
         let currentGroup = [];
-        let currentSize = 0;
+        let currentResources = new Set(); // 当前组已包含的资源
+        let currentTotalSize = 0; // 当前组的总大小（章节+资源）
 
         for (const chapter of this.chapters) {
-            // 检查资源引用并计算章节真实大小
-            const chapterResources = this.findChapterResources(chapter);
-            let chapterTotalSize = chapter.size;
+            // 计算如果加入此章节，会新增多少大小
+            let newChapterSize = chapter.size;
+            let newResourcesSize = 0;
             
-            // 如果加入当前章节会超过目标大小，并且当前组不为空，则开始新组
-            if (currentSize + chapterTotalSize > effectiveTargetSize && currentGroup.length > 0) {
+            for (const resId of chapter.usedResources) {
+                if (!currentResources.has(resId)) {
+                    const res = this.manifest.get(resId);
+                    if (res && !res.isContent) {
+                        newResourcesSize += res.size;
+                    }
+                }
+            }
+            
+            const additionalSize = newChapterSize + newResourcesSize;
+            const projectedSize = currentTotalSize + additionalSize;
+            
+            // 如果加入会超过目标，并且当前组不为空，先保存当前组
+            if (projectedSize > targetBytes && currentGroup.length > 0) {
                 this.splitPlan.push({
                     chapters: [...currentGroup],
-                    size: currentSize + sharedResourcesSize,
-                    resources: chapterResources
+                    resources: new Set(currentResources),
+                    totalSize: currentTotalSize
                 });
+                
+                // 重置当前组
                 currentGroup = [];
-                currentSize = 0;
+                currentResources = new Set();
+                currentTotalSize = 0;
+                
+                // 重新计算此章节的资源（因为新组没有任何资源）
+                newResourcesSize = 0;
+                for (const resId of chapter.usedResources) {
+                    const res = this.manifest.get(resId);
+                    if (res && !res.isContent) {
+                        newResourcesSize += res.size;
+                    }
+                }
             }
-
+            
+            // 加入此章节
             currentGroup.push(chapter);
-            currentSize += chapterTotalSize;
+            currentTotalSize += chapter.size;
+            
+            for (const resId of chapter.usedResources) {
+                if (!currentResources.has(resId)) {
+                    const res = this.manifest.get(resId);
+                    if (res && !res.isContent) {
+                        currentResources.add(resId);
+                        currentTotalSize += res.size;
+                    }
+                }
+            }
         }
-
+        
         // 添加最后一组
         if (currentGroup.length > 0) {
             this.splitPlan.push({
                 chapters: [...currentGroup],
-                size: currentSize + sharedResourcesSize,
-                resources: this.findChapterResources(currentGroup[currentGroup.length - 1])
+                resources: new Set(currentResources),
+                totalSize: currentTotalSize
             });
         }
-    }
-
-    findChapterResources(chapter) {
-        // 这里可以解析章节内容，找出引用的资源
-        // 简化处理：返回所有共享资源
-        return new Map(this.resources);
     }
 
     showPreview() {
@@ -377,23 +443,26 @@ class EPUBSplitter {
 
         // 显示拆分预览
         const prefix = this.outputPrefix.value || this.file.name.replace('.epub', '');
-        this.splitList.innerHTML = this.splitPlan.map((split, index) => `
-            <div class="split-item">
-                <div class="split-number">${index + 1}</div>
-                <div class="split-details">
-                    <div class="split-name">${prefix}_part${index + 1}.epub</div>
-                    <div class="split-chapters">
-                        章节 ${split.chapters[0].index} - ${split.chapters[split.chapters.length - 1].index}
-                        (共 ${split.chapters.length} 章)
+        this.splitList.innerHTML = this.splitPlan.map((split, index) => {
+            const isOversized = split.totalSize > this.targetSize.value * 1024 * 1024;
+            return `
+                <div class="split-item${isOversized ? ' oversized' : ''}">
+                    <div class="split-number">${index + 1}</div>
+                    <div class="split-details">
+                        <div class="split-name">${prefix}_part${index + 1}.epub</div>
+                        <div class="split-chapters">
+                            章节 ${split.chapters[0].index} - ${split.chapters[split.chapters.length - 1].index}
+                            (共 ${split.chapters.length} 章, ${split.resources.size} 个资源)
+                            ${isOversized ? ' ⚠️ 单章节超大' : ''}
+                        </div>
                     </div>
+                    <div class="split-size">≤ ${this.formatSize(split.totalSize)}</div>
                 </div>
-                <div class="split-size">${this.formatSize(split.size)}</div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // 显示章节列表
-        this.chapterList.innerHTML = this.chapters.map((chapter, idx) => {
-            // 找出该章节属于哪个分卷
+        this.chapterList.innerHTML = this.chapters.map((chapter) => {
             let splitIndex = this.splitPlan.findIndex(split => 
                 split.chapters.some(c => c.index === chapter.index)
             );
@@ -404,7 +473,7 @@ class EPUBSplitter {
                         <span class="chapter-index">#${chapter.index}</span>
                         <span class="chapter-title">${chapter.title}</span>
                     </div>
-                    <span class="chapter-size">${this.formatSize(chapter.size)}</span>
+                    <span class="chapter-size">${this.formatSize(chapter.size)} (${chapter.usedResources.size}资源)</span>
                     <span class="chapter-split-tag">Part ${splitIndex + 1}</span>
                 </div>
             `;
@@ -451,196 +520,52 @@ class EPUBSplitter {
     async createSplitEPUB(split, prefix, partNum) {
         const newZip = new JSZip();
 
-        // 1. 添加 mimetype（必须是第一个文件，且不压缩）
+        // 1. 添加 mimetype
         newZip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
 
         // 2. 添加 META-INF/container.xml
-        const containerXml = `<?xml version="1.0" encoding="UTF-8"?>
+        newZip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
     <rootfiles>
         <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
     </rootfiles>
-</container>`;
-        newZip.file('META-INF/container.xml', containerXml);
+</container>`);
 
-        // 3. 收集需要的资源
-        const includedResources = new Set();
-        
-        // 添加章节内容和解析其引用的资源
-        for (const chapter of split.chapters) {
-            if (chapter.content) {
-                const content = new TextDecoder().decode(chapter.content);
-                // 解析引用的资源
-                this.findResourcesInContent(content, chapter.href, includedResources);
-            }
-        }
-
-        // 4. 创建新的 content.opf
-        const opfContent = this.createOPF(split.chapters, includedResources, prefix, partNum);
-        newZip.file('OEBPS/content.opf', opfContent);
-
-        // 5. 添加章节文件
+        // 3. 添加章节文件
         for (const chapter of split.chapters) {
             if (chapter.content) {
                 newZip.file('OEBPS/' + chapter.href, chapter.content);
             }
         }
 
-        // 6. 添加必要的资源文件（CSS、图片、字体等）
-        for (const resourcePath of includedResources) {
-            const resource = this.resources.get(resourcePath);
-            if (resource && resource.content) {
-                newZip.file('OEBPS/' + resource.href, resource.content);
-            } else {
-                // 尝试从原始 manifest 获取
-                for (const [id, item] of this.manifest) {
-                    if (item.fullPath === resourcePath && item.content) {
-                        newZip.file('OEBPS/' + item.href, item.content);
-                        break;
-                    }
-                }
+        // 4. 添加资源文件
+        for (const resId of split.resources) {
+            const res = this.manifest.get(resId);
+            if (res && res.content) {
+                newZip.file('OEBPS/' + res.href, res.content);
             }
         }
 
-        // 7. 创建 NCX 导航文件
-        const ncxContent = this.createNCX(split.chapters, prefix, partNum);
-        newZip.file('OEBPS/toc.ncx', ncxContent);
-
-        // 8. 生成 EPUB
-        const blob = await newZip.generateAsync({
-            type: 'blob',
-            mimeType: 'application/epub+zip',
-            compression: 'DEFLATE',
-            compressionOptions: { level: 6 }
-        });
-
-        return blob;
-    }
-
-    findResourcesInContent(content, chapterHref, includedResources) {
-        // 获取章节所在目录
-        const chapterDir = chapterHref.substring(0, chapterHref.lastIndexOf('/') + 1);
-        
-        // 查找 src, href, url() 引用
-        const patterns = [
-            /src=["']([^"']+)["']/gi,
-            /href=["']([^"'#]+)["']/gi,
-            /url\(["']?([^"')]+)["']?\)/gi
-        ];
-
-        for (const pattern of patterns) {
-            let match;
-            while ((match = pattern.exec(content)) !== null) {
-                let resourcePath = match[1];
-                
-                // 跳过外部链接和数据 URI
-                if (resourcePath.startsWith('http') || resourcePath.startsWith('data:')) {
-                    continue;
-                }
-
-                // 解析相对路径
-                if (resourcePath.startsWith('../')) {
-                    resourcePath = this.resolveRelativePath(chapterDir, resourcePath);
-                } else if (!resourcePath.startsWith('/')) {
-                    resourcePath = chapterDir + resourcePath;
-                }
-
-                // 规范化路径
-                resourcePath = this.normalizePath(this.opfDir + resourcePath);
-                
-                // 添加到资源集合
-                if (this.resources.has(resourcePath) || this.manifest.has(resourcePath)) {
-                    includedResources.add(resourcePath);
-                }
-                
-                // 同时检查不带目录前缀的路径
-                for (const [id, item] of this.manifest) {
-                    if (item.fullPath === resourcePath || 
-                        item.href === match[1] ||
-                        item.fullPath.endsWith(match[1])) {
-                        includedResources.add(item.fullPath);
-                    }
-                }
-            }
-        }
-
-        // 确保包含所有 CSS 文件（它们可能引用其他资源）
-        for (const [id, item] of this.manifest) {
-            if (item.mediaType === 'text/css' || item.href.endsWith('.css')) {
-                includedResources.add(item.fullPath);
-            }
-        }
-    }
-
-    resolveRelativePath(basePath, relativePath) {
-        const parts = basePath.split('/').filter(p => p);
-        const relParts = relativePath.split('/');
-
-        for (const part of relParts) {
-            if (part === '..') {
-                parts.pop();
-            } else if (part !== '.') {
-                parts.push(part);
-            }
-        }
-
-        return parts.join('/');
-    }
-
-    normalizePath(path) {
-        const parts = path.split('/');
-        const result = [];
-
-        for (const part of parts) {
-            if (part === '..') {
-                result.pop();
-            } else if (part !== '.' && part !== '') {
-                result.push(part);
-            }
-        }
-
-        return result.join('/');
-    }
-
-    createOPF(chapters, includedResources, prefix, partNum) {
-        const manifestItems = [];
+        // 5. 创建 content.opf
+        const manifestItems = ['<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>'];
         const spineItems = [];
-
-        // 添加 NCX
-        manifestItems.push(`<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`);
-
-        // 添加章节
-        for (const chapter of chapters) {
+        
+        for (const chapter of split.chapters) {
             manifestItems.push(`<item id="${chapter.id}" href="${this.escapeXml(chapter.href)}" media-type="${chapter.mediaType}"/>`);
             spineItems.push(`<itemref idref="${chapter.id}"/>`);
         }
-
-        // 添加资源
-        let resourceIndex = 0;
-        const addedHrefs = new Set(chapters.map(c => c.href));
         
-        for (const resourcePath of includedResources) {
-            let resource = this.resources.get(resourcePath);
-            if (!resource) {
-                for (const [id, item] of this.manifest) {
-                    if (item.fullPath === resourcePath) {
-                        resource = item;
-                        break;
-                    }
-                }
-            }
-            
-            if (resource && !addedHrefs.has(resource.href)) {
-                const resourceId = `resource_${resourceIndex++}`;
-                manifestItems.push(`<item id="${resourceId}" href="${this.escapeXml(resource.href)}" media-type="${resource.mediaType}"/>`);
-                addedHrefs.add(resource.href);
+        for (const resId of split.resources) {
+            const res = this.manifest.get(resId);
+            if (res) {
+                manifestItems.push(`<item id="${res.id}" href="${this.escapeXml(res.href)}" media-type="${res.mediaType}"/>`);
             }
         }
 
-        return `<?xml version="1.0" encoding="UTF-8"?>
+        const opfContent = `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
     <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
-        <dc:title>${this.escapeXml(this.metadata.title)} (Part ${partNum})</dc:title>
+        <dc:title>${this.escapeXml(this.metadata.title)} (Part ${partNum}/${this.splitPlan.length})</dc:title>
         <dc:creator>${this.escapeXml(this.metadata.author)}</dc:creator>
         <dc:identifier id="BookId">${this.metadata.identifier}_part${partNum}</dc:identifier>
         <dc:language>${this.metadata.language}</dc:language>
@@ -652,10 +577,11 @@ class EPUBSplitter {
         ${spineItems.join('\n        ')}
     </spine>
 </package>`;
-    }
 
-    createNCX(chapters, prefix, partNum) {
-        const navPoints = chapters.map((chapter, index) => `
+        newZip.file('OEBPS/content.opf', opfContent);
+
+        // 6. 创建 NCX 导航文件
+        const navPoints = split.chapters.map((chapter, index) => `
         <navPoint id="navPoint-${index + 1}" playOrder="${index + 1}">
             <navLabel>
                 <text>${this.escapeXml(chapter.title)}</text>
@@ -663,7 +589,7 @@ class EPUBSplitter {
             <content src="${this.escapeXml(chapter.href)}"/>
         </navPoint>`).join('');
 
-        return `<?xml version="1.0" encoding="UTF-8"?>
+        const ncxContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
     <head>
@@ -678,6 +604,18 @@ class EPUBSplitter {
     <navMap>${navPoints}
     </navMap>
 </ncx>`;
+
+        newZip.file('OEBPS/toc.ncx', ncxContent);
+
+        // 7. 生成 EPUB
+        const blob = await newZip.generateAsync({
+            type: 'blob',
+            mimeType: 'application/epub+zip',
+            compression: 'DEFLATE',
+            compressionOptions: { level: 6 }
+        });
+
+        return blob;
     }
 
     escapeXml(str) {
@@ -709,8 +647,7 @@ class EPUBSplitter {
         
         document.getElementById('resultCount').textContent = this.resultFiles.length;
         
-        const resultFilesEl = document.getElementById('resultFiles');
-        resultFilesEl.innerHTML = this.resultFiles.map((file, index) => `
+        this.resultFilesEl.innerHTML = this.resultFiles.map((file, index) => `
             <div class="result-file">
                 <div class="result-file-icon">📕</div>
                 <div class="result-file-info">
@@ -775,8 +712,8 @@ class EPUBSplitter {
         this.file = null;
         this.zip = null;
         this.metadata = {};
+        this.manifest = new Map();
         this.chapters = [];
-        this.resources = new Map();
         this.splitPlan = [];
         this.resultFiles = [];
 
