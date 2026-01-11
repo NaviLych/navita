@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Better than Very</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="title">Better than Very</h1>
+        <div class="header-controls">
+            <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Open settings">⚙️</button>
+            <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark mode">🌙</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="madlib-container">
+            <div class="madlib">
+                <span class="madlib-text">Very</span>
+                <input 
+                    type="text" 
+                    id="adjectiveInput" 
+                    class="adjective-input" 
+                    placeholder="______"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+            </div>
+            
+            <div class="result-container">
+                <div class="result" id="result"></div>
+                <button class="refresh-btn" id="refreshBtn" title="Get another suggestion" aria-label="Get another suggestion">↻</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="apiKey">OpenAI API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKey" 
+                        placeholder="sk-..."
+                        autocomplete="off"
+                    />
+                    <small>Your API key is stored locally in your browser</small>
+                </div>
+                <div class="form-group">
+                    <label for="proxyUrl">Proxy URL (optional)</label>
+                    <input 
+                        type="url" 
+                        id="proxyUrl" 
+                        placeholder="https://your-proxy.com/v1"
+                        autocomplete="off"
+                    />
+                    <small>Leave empty to use OpenAI's API directly</small>
+                </div>
+                <button class="save-btn" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
