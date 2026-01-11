@@ -148,15 +148,28 @@ class BackupManager {
         UI.closeModal();
     }
 
+    async getNotesCount() {
+        try {
+            // Count all notes across all articles
+            const articles = await database.db.articles.toArray();
+            let count = 0;
+            for (const article of articles) {
+                const notes = await database.getNotesByArticleId(article.id);
+                count += notes.length;
+            }
+            return count;
+        } catch (error) {
+            return 0;
+        }
+    }
+
     async getStorageInfo() {
         try {
             const stats = await database.getStats();
             const estimate = await navigator.storage?.estimate();
             
-            // Get counts from all stores
-            const notes = await database.getNotesByArticleId ? 
-                (await Promise.all((await database.db.articles.toArray()).map(a => database.getNotesByArticleId(a.id)))).flat().length :
-                0;
+            // Get counts from stores
+            const notes = await this.getNotesCount();
             const checkins = (await database.getAllCheckins()).length;
             
             return {
