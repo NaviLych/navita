@@ -372,17 +372,26 @@ class ShareCardApp {
     
     async renderToCanvas(ctx, element) {
         // Use html2canvas library for rendering
-        // For now, we'll use a simple approach
-        const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-        
-        const canvas = await html2canvas(element, {
-            width: 390,
-            height: 520,
-            scale: 2,
-            backgroundColor: null
-        });
-        
-        ctx.drawImage(canvas, 0, 0);
+        try {
+            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+            
+            const canvas = await html2canvas(element, {
+                width: 390,
+                height: 520,
+                scale: 2,
+                backgroundColor: null,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            });
+            
+            // Clear and draw the captured canvas
+            ctx.clearRect(0, 0, 390, 520);
+            ctx.drawImage(canvas, 0, 0, 390, 520);
+        } catch (error) {
+            console.error('Canvas render error:', error);
+            throw error;
+        }
     }
     
     showStep(step) {
