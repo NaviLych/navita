@@ -220,7 +220,7 @@ class ShareCardApp {
         if (this.selectedType === 'article' && formData.generateSummary) {
             showLoading('生成摘要中...');
             try {
-                const summary = await this.generateSummary(formData.url);
+                const summary = await this.generateSummary(formData);
                 formData.summary = summary;
             } catch (error) {
                 console.error('Summary generation error:', error);
@@ -275,7 +275,7 @@ class ShareCardApp {
         }
     }
     
-    async generateSummary(url) {
+    async generateSummary(formData) {
         const apiKey = this.settings.get('apiKey');
         const apiProxy = this.settings.get('apiProxy');
         
@@ -305,7 +305,7 @@ class ShareCardApp {
                     },
                     {
                         role: 'user',
-                        content: `文章链接：${url}\n文章标题：${this.cardData.title || ''}\n\n请生成一个150字左右的摘要。`
+                        content: `文章链接：${formData.url || ''}\n文章标题：${formData.title || ''}\n\n请生成一个150字左右的摘要。`
                     }
                 ],
                 max_tokens: 300,
