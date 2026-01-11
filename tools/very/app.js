@@ -158,7 +158,10 @@ async function getSuggestion(adjective) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await response.json().catch((parseError) => {
+                console.error('Failed to parse error response:', parseError);
+                return {};
+            });
             throw new Error(errorData.error?.message || `API error: ${response.status}`);
         }
 
@@ -185,12 +188,13 @@ function displaySuggestion(word) {
     
     let index = 0;
     const typingSpeed = 100; // ms per character
+    let timeoutId = null;
 
     function typeCharacter() {
         if (index < word.length) {
             elements.result.textContent += word[index];
             index++;
-            setTimeout(typeCharacter, typingSpeed);
+            timeoutId = setTimeout(typeCharacter, typingSpeed);
         } else {
             elements.result.classList.remove('typing');
             elements.result.classList.add('visible');
@@ -203,6 +207,13 @@ function displaySuggestion(word) {
         elements.result.classList.add('visible');
         typeCharacter();
     }, 200);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+    };
 }
 
 // Error display
