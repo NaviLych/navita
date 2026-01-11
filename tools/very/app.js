@@ -60,6 +60,7 @@ function toggleTheme() {
 
 function updateThemeIcon() {
     elements.themeToggle.textContent = state.theme === 'light' ? '🌙' : '☀️';
+    elements.themeToggle.setAttribute('aria-label', state.theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
 }
 
 // Settings management
@@ -140,7 +141,7 @@ async function getSuggestion(adjective) {
                 'Authorization': `Bearer ${state.apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'system',
