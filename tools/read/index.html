@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>稍后读 - 阅读管理工具</title>
+    <meta name="description" content="纯前端阅读管理工具，支持稍后读、打卡、阅读笔记">
+    <link rel="stylesheet" href="css/main.css">
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff6600">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation header -->
+        <header id="header" class="header">
+            <div class="header-content">
+                <h1 class="logo">稍后读</h1>
+                <div class="header-actions">
+                    <button id="checkin-btn" class="btn-checkin" title="每日签到">
+                        <span class="icon">📅</span>
+                        <span class="label">签到</span>
+                    </button>
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="搜索文章...">
+                        <button id="search-btn" class="btn-search">🔍</button>
+                    </div>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <a href="#/home" class="nav-item active" data-route="home">首页</a>
+                <a href="#/read-later" class="nav-item" data-route="read-later">稍后读</a>
+                <a href="#/checkin" class="nav-item" data-route="checkin">打卡</a>
+                <a href="#/stats" class="nav-item" data-route="stats">统计</a>
+                <a href="#/settings" class="nav-item" data-route="settings">设置</a>
+            </nav>
+        </header>
+
+        <!-- Main content area -->
+        <main id="main-content" class="main-content">
+            <!-- Dynamic content will be loaded here -->
+        </main>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Modals -->
+        <div id="modal-overlay" class="modal-overlay hidden"></div>
+        <div id="modal-container" class="modal-container hidden"></div>
+    </div>
+
+    <!-- Core modules -->
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/router.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/article.js"></script>
+    <script type="module" src="js/readlater.js"></script>
+    <script type="module" src="js/checkin.js"></script>
+    <script type="module" src="js/recommendation.js"></script>
+    <script type="module" src="js/backup.js"></script>
+    <script type="module" src="js/stats.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
