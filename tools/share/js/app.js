@@ -283,6 +283,11 @@ class ShareCardApp {
             throw new Error('未设置 OpenAI API Key');
         }
         
+        // Note: This is a simplified implementation. In a production environment,
+        // you would need to fetch and extract the article content first before
+        // sending it to OpenAI. OpenAI cannot directly access URLs.
+        // For now, we ask the AI to generate a generic summary based on the URL/title.
+        
         const endpoint = apiProxy || 'https://api.openai.com/v1/chat/completions';
         
         const response = await fetch(endpoint, {
@@ -296,11 +301,11 @@ class ShareCardApp {
                 messages: [
                     {
                         role: 'system',
-                        content: '你是一个专业的文章摘要生成助手。请为文章生成150字左右的中文摘要。'
+                        content: '你是一个专业的文章摘要生成助手。请为文章生成150字左右的中文摘要。由于无法访问具体内容，请根据标题和链接生成一个合理的描述性摘要。'
                     },
                     {
                         role: 'user',
-                        content: `请为这个链接的文章生成摘要：${url}`
+                        content: `文章链接：${url}\n文章标题：${this.cardData.title || ''}\n\n请生成一个150字左右的摘要。`
                     }
                 ],
                 max_tokens: 300,
@@ -309,7 +314,8 @@ class ShareCardApp {
         });
         
         if (!response.ok) {
-            throw new Error('API request failed');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || 'API request failed');
         }
         
         const data = await response.json();

@@ -83,9 +83,9 @@ export class CardRenderer {
     }
     
     renderTextCard(data, theme) {
-        let content = this.escapeHtml(data.textContent);
+        let content = data.textContent;
         
-        // Apply highlights if any
+        // Apply highlights if any - work with original text, then escape
         if (data.highlights && data.highlights.length > 0) {
             // Sort highlights by position (reverse order to maintain indices)
             const sortedHighlights = [...data.highlights].sort((a, b) => b.start - a.start);
@@ -95,11 +95,22 @@ export class CardRenderer {
                 const highlighted = content.substring(highlight.start, highlight.end);
                 const after = content.substring(highlight.end);
                 
+                // Use a placeholder that won't be escaped
                 content = before + 
-                         `<span class="highlight">${highlighted}</span>` + 
+                         `<<<HIGHLIGHT_START>>>${highlighted}<<<HIGHLIGHT_END>>>` + 
                          after;
             });
         }
+        
+        // Now escape the entire content
+        content = this.escapeHtml(content);
+        
+        // Replace placeholders with actual HTML tags
+        content = content.replace(/&lt;&lt;&lt;HIGHLIGHT_START&gt;&gt;&gt;/g, '<span class="highlight">');
+        content = content.replace(/&lt;&lt;&lt;HIGHLIGHT_END&gt;&gt;&gt;/g, '</span>');
+        
+        // Convert line breaks to <br> tags
+        content = content.replace(/\n/g, '<br>');
         
         return `
             <div class="card-text-content">

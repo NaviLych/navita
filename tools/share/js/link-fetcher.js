@@ -2,12 +2,18 @@
 export class LinkFetcher {
     async fetchMetadata(url, type) {
         try {
-            // In a real implementation, you would call a backend service or use CORS proxy
-            // For this demo, we'll try to fetch basic meta tags
+            // NOTE: This implementation uses a third-party CORS proxy service.
+            // In a production environment, consider:
+            // 1. Using a self-hosted proxy for better privacy
+            // 2. Implementing server-side metadata fetching
+            // 3. Warning users about privacy implications
+            // The current approach is for demonstration purposes only.
             
             // Use a CORS proxy for demo purposes
             const proxyUrl = 'https://api.allorigins.win/get?url=';
-            const response = await fetch(proxyUrl + encodeURIComponent(url));
+            const response = await fetch(proxyUrl + encodeURIComponent(url), {
+                signal: AbortSignal.timeout(10000) // 10 second timeout
+            });
             
             if (!response.ok) {
                 throw new Error('Failed to fetch');
