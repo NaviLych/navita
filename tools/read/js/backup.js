@@ -153,13 +153,19 @@ class BackupManager {
             const stats = await database.getStats();
             const estimate = await navigator.storage?.estimate();
             
+            // Get counts from all stores
+            const notes = await database.getNotesByArticleId ? 
+                (await Promise.all((await database.db.articles.toArray()).map(a => database.getNotesByArticleId(a.id)))).flat().length :
+                0;
+            const checkins = (await database.getAllCheckins()).length;
+            
             return {
                 usage: estimate?.usage || 0,
                 quota: estimate?.quota || 0,
                 usagePercent: estimate ? (estimate.usage / estimate.quota * 100).toFixed(2) : 0,
                 articles: stats.totalArticles,
-                notes: await database.db.notes.count(),
-                checkins: await database.db.checkins.count()
+                notes: notes,
+                checkins: checkins
             };
         } catch (error) {
             console.error('Failed to get storage info:', error);
