@@ -121,6 +121,11 @@ function handleRefresh() {
     }
 }
 
+// Helper function to remove quotes
+function removeQuotes(text) {
+    return text.replace(/^["「『]|["」』]$/g, '');
+}
+
 // API call to OpenAI
 async function getPoem(description) {
     if (!state.apiKey) {
@@ -189,8 +194,8 @@ async function getPoem(description) {
             }
             
             // Remove quotes if present
-            poem = poem.replace(/^["「『]|["」』]$/g, '');
-            poet = poet.replace(/^["「『]|["」』]$/g, '');
+            poem = removeQuotes(poem);
+            poet = removeQuotes(poet);
             
             state.usedPoems.add(poem);
             displayPoem(poem, poet);
@@ -213,13 +218,12 @@ function displayPoem(poem, poet) {
     
     let index = 0;
     const typingSpeed = 100; // ms per character
-    let timeoutId = null;
 
     function typeCharacter() {
         if (index < poem.length) {
             elements.poemResult.textContent += poem[index];
             index++;
-            timeoutId = setTimeout(typeCharacter, typingSpeed);
+            setTimeout(typeCharacter, typingSpeed);
         } else {
             elements.poemResult.classList.remove('typing');
             elements.poemResult.classList.add('visible');
@@ -237,13 +241,6 @@ function displayPoem(poem, poet) {
         elements.poemResult.classList.add('visible');
         typeCharacter();
     }, 200);
-    
-    // Cleanup function to prevent memory leaks
-    return () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-    };
 }
 
 // Error display
