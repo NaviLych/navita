@@ -12,6 +12,9 @@
     --border-color: #e0e0e0;
     --input-bg: #f8f8f8;
     --accent-color: #1a1a1a;
+    --dot-color-start: #2d2d2d;
+    --dot-color-end: #1a1a1a;
+    --dice-face-bg: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -21,6 +24,9 @@
     --border-color: #333333;
     --input-bg: #252525;
     --accent-color: #f0f0f0;
+    --dot-color-start: #e0e0e0;
+    --dot-color-end: #f0f0f0;
+    --dice-face-bg: #2d2d2d;
 }
 
 body {
@@ -65,6 +71,37 @@ body {
     font-size: 1.5rem;
     font-weight: 500;
     color: var(--text-color);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.theme-toggle {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    background: var(--text-color);
+    color: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
 }
 
 .dice-controls {
@@ -197,7 +234,7 @@ body {
     position: absolute;
     width: 70px;
     height: 70px;
-    background: var(--text-color);
+    background: var(--dice-face-bg);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -224,7 +261,7 @@ body {
 .dot {
     width: 12px;
     height: 12px;
-    background: radial-gradient(circle at 30% 30%, #2d2d2d, #1a1a1a);
+    background: radial-gradient(circle at 30% 30%, var(--dot-color-start), var(--dot-color-end));
     border-radius: 50%;
     box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.2);
 }
