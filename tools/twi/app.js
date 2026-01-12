@@ -1,6 +1,7 @@
 // State management
 let tweets = [];
 let theme = 'light';
+let toastTimeout = null;
 
 // DOM elements
 const composeTextarea = document.getElementById('composeTextarea');
@@ -75,9 +76,9 @@ function handleTweetSubmit() {
         return;
     }
     
-    // Create new tweet
+    // Create new tweet with more robust ID generation
     const tweet = {
-        id: Date.now(),
+        id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         text: text,
         timestamp: new Date().toISOString(),
         likes: 0,
@@ -108,6 +109,8 @@ function handleTweetSubmit() {
 }
 
 // Render timeline
+// Note: Full re-render is used for simplicity. For a small app with localStorage
+// constraints (typically hundreds of tweets max), this is acceptable performance-wise.
 function renderTimeline() {
     // Clear timeline
     timeline.innerHTML = '';
@@ -285,11 +288,18 @@ function escapeHtml(text) {
 }
 
 function showToast(message) {
+    // Clear any existing toast timeout
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toast.classList.remove('show');
+    }
+    
     toast.textContent = message;
     toast.classList.add('show');
     
-    setTimeout(() => {
+    toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
+        toastTimeout = null;
     }, 3000);
 }
 
