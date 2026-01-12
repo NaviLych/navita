@@ -375,7 +375,11 @@ class ShareCardApp {
         showLoading('AI正在生成最佳样式...');
         
         try {
-            this.geminiAPI = new GeminiAPI(geminiApiKey);
+            // Reuse existing instance if API key hasn't changed
+            if (!this.geminiAPI || this.geminiAPI.apiKey !== geminiApiKey) {
+                this.geminiAPI = new GeminiAPI(geminiApiKey);
+            }
+            
             const styleConfig = await this.geminiAPI.generateCardStyle(this.cardData);
             
             this.aiGeneratedStyle = styleConfig;

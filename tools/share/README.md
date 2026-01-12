@@ -147,8 +147,6 @@ share/
     ├── settings.js      # 设置管理
     └── ui-utils.js      # UI工具
 ```
-    └── ui-utils.js      # UI工具
-```
 
 ## 许可
 

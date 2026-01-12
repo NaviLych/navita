@@ -39,7 +39,18 @@ export class GeminiAPI {
             }
             
             const data = await response.json();
-            const content = data.candidates[0].content.parts[0].text;
+            
+            // Validate response structure
+            if (!data.candidates || data.candidates.length === 0) {
+                throw new Error('API returned no candidates');
+            }
+            
+            const candidate = data.candidates[0];
+            if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+                throw new Error('API response missing content');
+            }
+            
+            const content = candidate.content.parts[0].text;
             
             // Parse the JSON response from Gemini
             return this.parseStyleResponse(content);
