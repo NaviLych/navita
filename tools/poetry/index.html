@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>诗词寻觅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="title">诗词寻觅</h1>
+        <div class="header-controls">
+            <button class="icon-btn" id="settingsBtn" title="设置" aria-label="打开设置">⚙️</button>
+            <button class="icon-btn" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="search-container">
+            <div class="input-section">
+                <textarea 
+                    id="descriptionInput" 
+                    class="description-input" 
+                    placeholder="请输入一段描述，寻找最合适的诗词..."
+                    rows="3"
+                    autocomplete="off"
+                    spellcheck="false"
+                ></textarea>
+                <button class="search-btn" id="searchBtn">寻觅</button>
+            </div>
+            
+            <div class="result-container">
+                <div class="poem-result" id="poemResult"></div>
+                <div class="poet-result" id="poetResult"></div>
+                <button class="refresh-btn" id="refreshBtn" title="换一首" aria-label="换一首诗词">↻</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="apiKey">OpenAI API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKey" 
+                        placeholder="sk-..."
+                        autocomplete="off"
+                    />
+                    <small>您的 API key 将保存在本地浏览器中</small>
+                </div>
+                <div class="form-group">
+                    <label for="proxyUrl">代理 URL（可选）</label>
+                    <input 
+                        type="url" 
+                        id="proxyUrl" 
+                        placeholder="https://your-proxy.com/v1"
+                        autocomplete="off"
+                    />
+                    <small>留空则直接使用 OpenAI 的 API</small>
+                </div>
+                <button class="save-btn" id="saveSettings">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
