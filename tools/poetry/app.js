@@ -207,7 +207,7 @@ async function getPoem(description) {
             poet = removeQuotes(poet);
             
             // Ensure poet is not empty
-            if (!poet || poet === '') {
+            if (!poet) {
                 poet = '佚名';
             }
             
