@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1DA1F2">
+    <title>Twi - 笔记</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-inner">
+                <div class="logo">
+                    <span class="logo-icon">🐦</span>
+                </div>
+                <nav class="nav-menu">
+                    <button class="nav-item active">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-text">主页</span>
+                    </button>
+                    <button class="nav-item" id="themeToggle">
+                        <span class="nav-icon" id="themeIcon">🌙</span>
+                        <span class="nav-text">主题</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="header-title">主页</h1>
+            </header>
+
+            <!-- Compose Tweet -->
+            <section class="compose-section">
+                <div class="compose-container">
+                    <div class="compose-avatar">
+                        <div class="avatar">📝</div>
+                    </div>
+                    <div class="compose-content">
+                        <textarea 
+                            class="compose-textarea" 
+                            id="composeTextarea"
+                            placeholder="有什么新鲜事？"
+                            maxlength="280"
+                        ></textarea>
+                        <div class="compose-footer">
+                            <div class="char-counter" id="charCounter">
+                                <span class="char-count">0</span>
+                                <span class="char-limit">/280</span>
+                            </div>
+                            <button class="btn-tweet" id="tweetBtn" disabled>发推</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Timeline/Feed -->
+            <section class="timeline" id="timeline">
+                <!-- Tweets will be dynamically inserted here -->
+            </section>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📭</div>
+                <h2>还没有推文</h2>
+                <p>开始写下你的第一条推文吧！</p>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (optional - for desktop) -->
+        <aside class="right-sidebar">
+            <div class="trends-widget">
+                <h2 class="widget-title">统计</h2>
+                <div class="stat-item">
+                    <span class="stat-label">总推文</span>
+                    <span class="stat-value" id="totalTweets">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">总喜欢</span>
+                    <span class="stat-value" id="totalLikes">0</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
