@@ -27,7 +27,7 @@
 
 body {
     font-family: "EB Garamond", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: linear-gradient(135deg, var(--text-color) 0%, var(--text-color) 100%);
+    background: var(--text-color);
     min-height: 100vh;
     color: var(--text-color);
     line-height: 1.6;
@@ -296,7 +296,7 @@ body {
 
 .btn-primary {
     flex: 1;
-    background: linear-gradient(135deg, var(--text-color) 0%, var(--text-color) 100%);
+    background: var(--text-color);
     color: white;
     border: none;
     border-radius: 8px;
