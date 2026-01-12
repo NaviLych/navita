@@ -137,7 +137,14 @@ async function getPoem(description) {
     const endpoint = `${baseUrl}/chat/completions`;
 
     // Build the prompt to avoid repetition
-    let prompt = `根据以下描述，找出一句最合适的中国古典诗词（只需要一句诗词，不是整首诗）。请只返回诗词本身和作者名字，格式为：诗词内容\\n作者名字（如果不知道作者就写"佚名"）。不要返回任何其他内容。
+    let prompt = `根据以下描述，找出一句最合适的中国古典诗词（只需要一句诗词，不是整首诗）。
+
+重要要求：
+1. 必须是真实存在的中国古典诗词，不能编造或创作新的内容
+2. 只能推荐唐诗、宋词、元曲或更早期的古典诗词作品
+3. 返回格式必须严格为两行：第一行是诗词内容，第二行是作者名字
+4. 如果确实不知道作者，第二行写"佚名"
+5. 不要添加任何其他文字、标点或解释
 
 描述：${description}`;
     
@@ -158,7 +165,7 @@ async function getPoem(description) {
                 messages: [
                     {
                         role: 'system',
-                        content: '你是一个精通中国古典诗词的助手。你需要根据用户的描述，找出最合适的一句诗词。返回格式为：诗词内容\\n作者名字。如果不知道作者，就写"佚名"。'
+                        content: '你是一个精通中国古典诗词的助手。你只能推荐真实存在的古典诗词，绝不能编造或创作。返回格式必须严格为两行：第一行是诗词内容，第二行是作者名字。如果不知道作者，就写"佚名"。不要添加任何其他内容。'
                     },
                     {
                         role: 'user',
@@ -182,13 +189,15 @@ async function getPoem(description) {
         const result = data.choices[0]?.message?.content?.trim();
 
         if (result) {
+            // Split by newline and filter out empty lines
             const lines = result.split('\n').filter(line => line.trim());
             let poem = '';
             let poet = '佚名';
             
             if (lines.length >= 2) {
                 poem = lines[0].trim();
-                poet = lines[1].trim();
+                // Get the poet from the second line, removing common prefixes
+                poet = lines[1].trim().replace(/^[—\-\s]+/, '').replace(/^(作者[：:]\s*|by\s+)/i, '');
             } else if (lines.length === 1) {
                 poem = lines[0].trim();
             }
@@ -196,6 +205,11 @@ async function getPoem(description) {
             // Remove quotes if present
             poem = removeQuotes(poem);
             poet = removeQuotes(poet);
+            
+            // Ensure poet is not empty
+            if (!poet || poet === '') {
+                poet = '佚名';
+            }
             
             state.usedPoems.add(poem);
             displayPoem(poem, poet);
