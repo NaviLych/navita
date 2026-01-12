@@ -17,14 +17,17 @@
         <!-- 顶部控制栏 -->
         <header class="control-bar">
             <h1>骰子</h1>
-            <div class="dice-controls">
-                <button class="btn btn-remove" id="removeDice" title="减少骰子">
-                    <span>−</span>
-                </button>
-                <span class="dice-count" id="diceCount">1</span>
-                <button class="btn btn-add" id="addDice" title="增加骰子">
-                    <span>+</span>
-                </button>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
+                <div class="dice-controls">
+                    <button class="btn btn-remove" id="removeDice" title="减少骰子">
+                        <span>−</span>
+                    </button>
+                    <span class="dice-count" id="diceCount">1</span>
+                    <button class="btn btn-add" id="addDice" title="增加骰子">
+                        <span>+</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -61,6 +64,25 @@
         🔊 点击任意位置启用音效
     </div>
 
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.textContent = '☀️';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
