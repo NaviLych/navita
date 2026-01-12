@@ -2,22 +2,22 @@
 
 /* CSS Variables */
 :root {
-    --primary-color: #ff6600;
-    --secondary-color: #ff9933;
-    --success-color: #52c41a;
-    --error-color: #ff4d4f;
-    --warning-color: #faad14;
-    --info-color: #1890ff;
-    --text-color: #333;
-    --text-secondary: #666;
-    --text-light: #999;
-    --bg-color: #fff;
-    --bg-secondary: #f5f5f5;
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-secondary: #666666;
     --border-color: #e0e0e0;
+    --input-bg: #f8f8f8;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
     --border-radius: 8px;
-    --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --text-secondary: #999999;
+    --border-color: #333333;
+    --input-bg: #252525;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Reset and Base Styles */
@@ -28,11 +28,12 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+    font-family: 'EB Garamond', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
                  'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
     color: var(--text-color);
-    background: var(--bg-secondary);
+    background: var(--bg-color);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #app {
@@ -62,7 +63,7 @@ body {
 .logo {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .header-actions {
@@ -76,21 +77,21 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
+    background: var(--text-color);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .btn-checkin:hover {
-    background: var(--secondary-color);
+    background: var(--text-secondary);
     transform: translateY(-2px);
 }
 
 .btn-checkin.checked {
-    background: var(--success-color);
+    background: var(--text-color);
 }
 
 .search-box {
@@ -108,7 +109,7 @@ body {
 
 .btn-search {
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
+    background: var(--text-color);
     color: white;
     border: none;
     border-radius: var(--border-radius);
@@ -131,15 +132,15 @@ body {
     color: var(--text-color);
     font-weight: 500;
     position: relative;
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .nav-item.active {
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .nav-item.active::after {
@@ -149,7 +150,7 @@ body {
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--primary-color);
+    background: var(--text-color);
 }
 
 /* Main Content */
@@ -171,7 +172,7 @@ body {
 
 .page-header h2 {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Buttons */
@@ -181,8 +182,8 @@ body {
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 0.9rem;
-    transition: var(--transition);
-    background: var(--bg-secondary);
+    transition: all 0.2s ease;
+    background: var(--input-bg);
     color: var(--text-color);
 }
 
@@ -192,22 +193,22 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--text-color);
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--secondary-color);
+    background: var(--text-secondary);
 }
 
 .btn-secondary {
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     color: var(--text-color);
     border: 1px solid var(--border-color);
 }
 
 .btn-danger {
-    background: var(--error-color);
+    background: var(--text-color);
     color: white;
 }
 
@@ -222,7 +223,7 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     padding: 0.25rem;
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .btn-icon:hover {
@@ -236,7 +237,7 @@ body {
 .btn-link {
     background: none;
     border: none;
-    color: var(--primary-color);
+    color: var(--text-color);
     cursor: pointer;
     text-decoration: underline;
     padding: 0;
@@ -257,19 +258,19 @@ body {
     background: white;
     border-radius: 20px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s ease;
     white-space: nowrap;
 }
 
 .tab-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--text-color);
+    color: var(--text-color);
 }
 
 .tab-btn.active {
-    background: var(--primary-color);
+    background: var(--text-color);
     color: white;
-    border-color: var(--primary-color);
+    border-color: var(--text-color);
 }
 
 /* Waterfall Layout */
@@ -292,12 +293,12 @@ body {
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: var(--shadow);
-    transition: var(--transition);
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 
 .article-card:hover {
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--shadow);
     transform: translateY(-4px);
 }
 
@@ -306,7 +307,7 @@ body {
     height: 180px;
     background-size: cover;
     background-position: center;
-    background-color: var(--bg-secondary);
+    background-color: var(--input-bg);
 }
 
 .card-content {
@@ -315,7 +316,7 @@ body {
 
 .card-title {
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 0.5rem;
     line-height: 1.4;
     display: -webkit-box;
@@ -339,12 +340,12 @@ body {
     display: flex;
     gap: 1rem;
     font-size: 0.85rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
 
 .meta-domain {
-    color: var(--primary-color);
+    color: var(--text-color);
     font-weight: 500;
 }
 
@@ -358,7 +359,7 @@ body {
 .tag {
     display: inline-block;
     padding: 0.2rem 0.5rem;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border-radius: 4px;
     font-size: 0.8rem;
     color: var(--text-secondary);
@@ -374,20 +375,20 @@ body {
 .progress-bar {
     flex: 1;
     height: 6px;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border-radius: 3px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background: var(--success-color);
+    background: var(--text-color);
     transition: width 0.3s ease;
 }
 
 .progress-text {
     font-size: 0.8rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     min-width: 40px;
 }
 
@@ -409,7 +410,7 @@ body {
 
 .section-header h3 {
     font-size: 1.3rem;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Filters */
@@ -441,7 +442,7 @@ body {
     gap: 0.5rem;
     margin-bottom: 1rem;
     padding: 1rem;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border-radius: var(--border-radius);
 }
 
@@ -464,7 +465,7 @@ body {
 
 .btn-back {
     padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
@@ -491,7 +492,7 @@ body {
 .article-meta {
     display: flex;
     gap: 1.5rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-size: 0.9rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
@@ -540,7 +541,7 @@ body {
 }
 
 .note-item {
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     padding: 1rem;
     border-radius: var(--border-radius);
     margin-bottom: 1rem;
@@ -555,7 +556,7 @@ body {
     display: flex;
     justify-content: space-between;
     font-size: 0.85rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 /* Checkin Page */
@@ -570,7 +571,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--text-color), var(--text-secondary));
     color: white;
     padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
@@ -604,18 +605,18 @@ body {
     align-items: center;
     gap: 1rem;
     padding: 2rem 3rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--text-color), var(--text-secondary));
     color: white;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 1.2rem;
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .btn-checkin-large:hover {
     transform: scale(1.05);
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--shadow);
 }
 
 .btn-checkin-large .icon {
@@ -628,7 +629,7 @@ body {
     align-items: center;
     gap: 1rem;
     font-size: 1.2rem;
-    color: var(--success-color);
+    color: var(--text-color);
 }
 
 .checked-status .icon {
@@ -673,9 +674,9 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border-radius: var(--border-radius);
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .task-item.completed {
@@ -683,7 +684,7 @@ body {
 }
 
 .task-title {
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 0.25rem;
 }
 
@@ -695,7 +696,7 @@ body {
 .task-reward {
     font-size: 1.2rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 /* Calendar */
@@ -722,7 +723,7 @@ body {
 }
 
 .calendar-title {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 1.1rem;
 }
 
@@ -730,7 +731,7 @@ body {
     cursor: pointer;
     padding: 0.5rem;
     user-select: none;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .calendar-weekdays {
@@ -742,7 +743,7 @@ body {
 
 .weekday {
     text-align: center;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-secondary);
     padding: 0.5rem;
 }
@@ -759,8 +760,8 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--bg-secondary);
-    transition: var(--transition);
+    background: var(--input-bg);
+    transition: all 0.2s ease;
 }
 
 .calendar-day.empty {
@@ -768,13 +769,13 @@ body {
 }
 
 .calendar-day.checked {
-    background: var(--success-color);
+    background: var(--text-color);
     color: white;
     font-weight: bold;
 }
 
 .calendar-day.today {
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--text-color);
 }
 
 /* Stats Page */
@@ -796,7 +797,7 @@ body {
 .stat-value {
     font-size: 2.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--text-color);
     margin-bottom: 0.5rem;
 }
 
@@ -826,7 +827,7 @@ body {
 }
 
 .achievement-card {
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     padding: 1rem;
     border-radius: var(--border-radius);
     text-align: center;
@@ -838,7 +839,7 @@ body {
 }
 
 .achievement-title {
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 0.25rem;
 }
 
@@ -864,8 +865,8 @@ body {
 }
 
 .stats-table th {
-    font-weight: 600;
-    background: var(--bg-secondary);
+    font-weight: 500;
+    background: var(--input-bg);
 }
 
 /* Settings Page */
@@ -917,7 +918,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem;
-    background: var(--bg-secondary);
+    background: var(--input-bg);
     border-radius: var(--border-radius);
 }
 
@@ -967,7 +968,7 @@ body {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: var(--text-light);
+    color: var(--text-secondary);
 }
 
 .modal-body {
@@ -1024,7 +1025,7 @@ body {
     border: 1px solid #ffd666;
     padding: 1rem;
     border-radius: var(--border-radius);
-    color: var(--warning-color);
+    color: var(--text-secondary);
     margin-top: 1rem;
 }
 
@@ -1043,11 +1044,11 @@ body {
     padding: 1rem 1.5rem;
     background: white;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--shadow);
     min-width: 250px;
     opacity: 0;
     transform: translateX(100%);
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .toast.show {
@@ -1056,19 +1057,19 @@ body {
 }
 
 .toast-success {
-    border-left: 4px solid var(--success-color);
+    border-left: 4px solid var(--text-color);
 }
 
 .toast-error {
-    border-left: 4px solid var(--error-color);
+    border-left: 4px solid var(--text-color);
 }
 
 .toast-info {
-    border-left: 4px solid var(--info-color);
+    border-left: 4px solid var(--text-color);
 }
 
 .toast-warning {
-    border-left: 4px solid var(--warning-color);
+    border-left: 4px solid var(--text-secondary);
 }
 
 /* Loading */
@@ -1089,7 +1090,7 @@ body {
     width: 50px;
     height: 50px;
     border: 4px solid var(--border-color);
-    border-top-color: var(--primary-color);
+    border-top-color: var(--text-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1103,7 +1104,7 @@ body {
     position: fixed;
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--text-color);
     pointer-events: none;
     z-index: 3000;
     opacity: 0;
@@ -1132,14 +1133,14 @@ body {
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
-    color: var(--text-light);
+    color: var(--text-secondary);
     font-size: 1.1rem;
 }
 
 .badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background: var(--success-color);
+    background: var(--text-color);
     color: white;
     border-radius: 12px;
     font-size: 0.85rem;
