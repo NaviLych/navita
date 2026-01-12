@@ -6,28 +6,34 @@
 }
 
 :root {
-    --bg-primary: #1a1a2e;
-    --bg-secondary: #16213e;
-    --bg-tertiary: #0f3460;
-    --accent-color: #e94560;
-    --accent-hover: #ff6b6b;
-    --gold-color: #ffd700;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --glow-color: rgba(233, 69, 96, 0.5);
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+    --input-bg: #f8f8f8;
+    --accent-color: #1a1a1a;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --text-secondary: #999999;
+    --border-color: #333333;
+    --input-bg: #252525;
+    --accent-color: #f0f0f0;
 }
 
 body {
-    font-family: 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+    font-family: 'EB Garamond', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-color);
     min-height: 100vh;
     min-height: 100dvh;
-    color: var(--text-primary);
+    color: var(--text-color);
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     touch-action: manipulation;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 应用容器 */
@@ -48,36 +54,31 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 20px;
+    padding: 1rem 1.5rem;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
 }
 
 .control-bar h1 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    background: linear-gradient(90deg, var(--gold-color), var(--accent-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-color);
 }
 
 .dice-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 1rem;
 }
 
 .dice-count {
-    font-size: 1.8rem;
-    font-weight: bold;
-    min-width: 40px;
+    font-size: 1.5rem;
+    font-weight: 500;
+    min-width: 2.5rem;
     text-align: center;
-    color: var(--gold-color);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: var(--text-color);
 }
 
 .btn {
@@ -94,7 +95,7 @@ body {
 }
 
 .btn-add {
-    background: linear-gradient(135deg, #4ade80, #22c55e);
+    background: var(--text-color);
     color: white;
     box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
 }
@@ -105,7 +106,7 @@ body {
 }
 
 .btn-remove {
-    background: linear-gradient(135deg, #f87171, #ef4444);
+    background: var(--text-color);
     color: white;
     box-shadow: 0 4px 15px rgba(248, 113, 113, 0.4);
 }
@@ -196,7 +197,7 @@ body {
     position: absolute;
     width: 70px;
     height: 70px;
-    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    background: var(--text-color);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -240,7 +241,7 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
     color: white;
-    background: linear-gradient(135deg, var(--accent-color), #ff4757);
+    background: var(--text-color);
     border: none;
     border-radius: 50px;
     cursor: pointer;
@@ -318,7 +319,7 @@ body {
 .total-points .value {
     font-size: 3rem;
     font-weight: bold;
-    color: var(--gold-color);
+    color: var(--accent-color);
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
     display: block;
 }
