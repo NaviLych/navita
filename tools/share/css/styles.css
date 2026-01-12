@@ -355,6 +355,41 @@ body {
     box-shadow: var(--shadow);
 }
 
+.theme-btn-ai {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-btn-ai::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.theme-btn-ai:hover::before {
+    opacity: 1;
+}
+
+.theme-btn-ai:hover {
+    border-color: transparent;
+}
+
+.theme-btn-ai.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
 /* ===== Preview Container ===== */
 .preview-container {
     background: rgba(255, 255, 255, 0.9);
@@ -883,4 +918,18 @@ body {
 .card-podcast .card-podcast-name {
     font-size: 1rem;
     opacity: 0.85;
+}
+
+/* AI-generated decorations */
+.ai-decoration {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.card-preview.theme-ai .card-player,
+.card-preview.theme-ai .card-article,
+.card-preview.theme-ai .card-text-content {
+    position: relative;
+    z-index: 1;
 }

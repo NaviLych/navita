@@ -3,6 +3,7 @@ import { CardManager } from './card-manager.js';
 import { LinkFetcher } from './link-fetcher.js';
 import { CardRenderer } from './card-renderer.js';
 import { SettingsManager } from './settings.js';
+import { GeminiAPI } from './gemini-api.js';
 import { showToast, showLoading, hideLoading } from './ui-utils.js';
 
 class ShareCardApp {
@@ -11,11 +12,13 @@ class ShareCardApp {
         this.selectedType = null;
         this.cardData = null;
         this.currentTheme = 'modern';
+        this.aiGeneratedStyle = null;
         
         this.cardManager = new CardManager();
         this.linkFetcher = new LinkFetcher();
         this.cardRenderer = new CardRenderer();
         this.settings = new SettingsManager();
+        this.geminiAPI = null;
         
         this.init();
     }
@@ -329,10 +332,25 @@ class ShareCardApp {
         const html = this.cardRenderer.render(this.cardData, this.currentTheme);
         preview.innerHTML = html;
         preview.className = `card-preview theme-${this.currentTheme}`;
+        
+        // Apply AI-generated style if available
+        if (this.currentTheme === 'ai' && this.aiGeneratedStyle) {
+            const cardElement = preview.firstElementChild;
+            if (cardElement && this.geminiAPI) {
+                this.geminiAPI.applyStyleToCard(cardElement, this.aiGeneratedStyle);
+            }
+        }
     }
     
     selectTheme(theme) {
+        // If AI theme is selected, generate AI-powered style
+        if (theme === 'ai') {
+            this.generateAIStyle();
+            return;
+        }
+        
         this.currentTheme = theme;
+        this.aiGeneratedStyle = null; // Clear AI style when selecting preset theme
         
         // Update active button
         document.querySelectorAll('.theme-btn').forEach(btn => {
@@ -341,6 +359,42 @@ class ShareCardApp {
         
         // Re-render preview
         this.renderPreview();
+    }
+    
+    async generateAIStyle() {
+        const geminiApiKey = this.settings.get('geminiApiKey');
+        
+        if (!geminiApiKey) {
+            showToast('请先在设置中配置 Gemini API Key');
+            setTimeout(() => {
+                this.openSettings();
+            }, 1000);
+            return;
+        }
+        
+        showLoading('AI正在生成最佳样式...');
+        
+        try {
+            this.geminiAPI = new GeminiAPI(geminiApiKey);
+            const styleConfig = await this.geminiAPI.generateCardStyle(this.cardData);
+            
+            this.aiGeneratedStyle = styleConfig;
+            this.currentTheme = 'ai';
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === 'ai');
+            });
+            
+            // Render with AI style
+            this.renderPreview();
+            showToast('AI样式生成成功！');
+        } catch (error) {
+            console.error('AI style generation error:', error);
+            showToast('AI样式生成失败: ' + error.message);
+        } finally {
+            hideLoading();
+        }
     }
     
     async handleDownload() {
@@ -429,8 +483,12 @@ class ShareCardApp {
         overlay?.classList.add('active');
         
         // Load current settings
+        const geminiApiKey = this.settings.get('geminiApiKey') || '';
         const apiKey = this.settings.get('apiKey') || '';
         const apiProxy = this.settings.get('apiProxy') || '';
+        
+        const geminiInput = document.getElementById('geminiApiKey');
+        if (geminiInput) geminiInput.value = geminiApiKey;
         
         document.getElementById('apiKey').value = apiKey;
         document.getElementById('apiProxy').value = apiProxy;
@@ -445,9 +503,11 @@ class ShareCardApp {
     }
     
     saveSettings() {
+        const geminiApiKey = document.getElementById('geminiApiKey')?.value || '';
         const apiKey = document.getElementById('apiKey').value;
         const apiProxy = document.getElementById('apiProxy').value;
         
+        this.settings.set('geminiApiKey', geminiApiKey);
         this.settings.set('apiKey', apiKey);
         this.settings.set('apiProxy', apiProxy);
         
