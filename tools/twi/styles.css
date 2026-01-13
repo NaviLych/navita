@@ -515,8 +515,13 @@ body {
 }
 
 @media (max-width: 500px) {
+    .app-container {
+        flex-direction: column;
+    }
+
     .sidebar {
         position: fixed;
+        top: auto;
         bottom: 0;
         left: 0;
         right: 0;
@@ -528,6 +533,7 @@ body {
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 100;
         background-color: var(--bg-primary);
+        order: 2;
     }
 
     .sidebar-inner {
@@ -556,7 +562,14 @@ body {
     }
 
     .main-content {
+        width: 100%;
+        max-width: 100%;
+        order: 1;
         padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    }
+
+    .right-sidebar {
+        display: none;
     }
 
     .header {
