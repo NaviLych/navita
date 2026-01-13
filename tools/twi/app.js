@@ -3,6 +3,12 @@ let tweets = [];
 let theme = 'light';
 let toastTimeout = null;
 
+// IndexedDB configuration
+const DB_NAME = 'twi-db';
+const DB_VERSION = 1;
+const STORE_NAME = 'tweets';
+let db = null;
+
 // DOM elements
 const composeTextarea = document.getElementById('composeTextarea');
 const tweetBtn = document.getElementById('tweetBtn');
@@ -17,9 +23,10 @@ const totalLikesEl = document.getElementById('totalLikes');
 const toast = document.getElementById('toast');
 
 // Initialize app
-function init() {
+async function init() {
     loadTheme();
-    loadTweets();
+    await initDB();
+    await loadTweets();
     renderTimeline();
     updateStats();
     attachEventListeners();
@@ -88,7 +95,7 @@ function handleTweetSubmit() {
     // Add to tweets array
     tweets.unshift(tweet);
     
-    // Save to localStorage
+    // Save to IndexedDB
     saveTweets();
     
     // Clear textarea
@@ -109,8 +116,8 @@ function handleTweetSubmit() {
 }
 
 // Render timeline
-// Note: Full re-render is used for simplicity. For a small app with localStorage
-// constraints (typically hundreds of tweets max), this is acceptable performance-wise.
+// Note: Full re-render is used for simplicity. For a small app with IndexedDB
+// constraints (typically thousands of tweets), this is acceptable performance-wise.
 function renderTimeline() {
     // Clear timeline
     timeline.innerHTML = '';
@@ -213,6 +220,110 @@ function updateStats() {
     totalLikesEl.textContent = totalLikes;
 }
 
+// IndexedDB initialization and management
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => {
+            console.error('Failed to open IndexedDB:', request.error);
+            showToast('数据库初始化失败');
+            reject(request.error);
+        };
+        
+        request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            
+            // Create object store if it doesn't exist
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+    });
+}
+
+function saveTweets() {
+    if (!db) {
+        console.error('Database not initialized');
+        showToast('保存失败：数据库未初始化');
+        return Promise.reject(new Error('Database not initialized'));
+    }
+    
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(STORE_NAME);
+        
+        // Clear existing data
+        const clearRequest = objectStore.clear();
+        
+        clearRequest.onsuccess = () => {
+            // Add all tweets
+            let addedCount = 0;
+            tweets.forEach(tweet => {
+                const addRequest = objectStore.add(tweet);
+                addRequest.onsuccess = () => {
+                    addedCount++;
+                    if (addedCount === tweets.length) {
+                        resolve();
+                    }
+                };
+                addRequest.onerror = () => {
+                    console.error('Failed to add tweet:', addRequest.error);
+                };
+            });
+            
+            // Handle empty tweets array
+            if (tweets.length === 0) {
+                resolve();
+            }
+        };
+        
+        clearRequest.onerror = () => {
+            console.error('Failed to clear tweets:', clearRequest.error);
+            showToast('保存失败');
+            reject(clearRequest.error);
+        };
+        
+        transaction.onerror = () => {
+            console.error('Transaction failed:', transaction.error);
+            showToast('保存失败');
+            reject(transaction.error);
+        };
+    });
+}
+
+function loadTweets() {
+    if (!db) {
+        console.error('Database not initialized');
+        return Promise.resolve();
+    }
+    
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(STORE_NAME);
+        const request = objectStore.getAll();
+        
+        request.onsuccess = () => {
+            tweets = request.result || [];
+            // Sort tweets by timestamp (newest first)
+            tweets.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            resolve(tweets);
+        };
+        
+        request.onerror = () => {
+            console.error('Failed to load tweets:', request.error);
+            tweets = [];
+            reject(request.error);
+        };
+    });
+}
+
 // Theme management
 function loadTheme() {
     const savedTheme = localStorage.getItem('twi-theme') || 'light';
@@ -234,28 +345,6 @@ function applyTheme(theme) {
     } else {
         document.documentElement.removeAttribute('data-theme');
         themeIcon.textContent = '🌙';
-    }
-}
-
-// LocalStorage management
-function saveTweets() {
-    try {
-        localStorage.setItem('twi-tweets', JSON.stringify(tweets));
-    } catch (e) {
-        console.error('Failed to save tweets:', e);
-        showToast('保存失败，请检查存储空间');
-    }
-}
-
-function loadTweets() {
-    try {
-        const saved = localStorage.getItem('twi-tweets');
-        if (saved) {
-            tweets = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('Failed to load tweets:', e);
-        tweets = [];
     }
 }
 
