@@ -46,7 +46,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 2rem 3rem;
+            padding: 1.5rem 2rem;
         }
 
         .title {
@@ -75,15 +75,15 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
-            max-width: 800px;
+            padding: 1.5rem;
+            max-width: 900px;
             margin: 0 auto;
             width: 100%;
         }
 
         .tools-grid {
             display: grid;
-            gap: 1rem;
+            gap: 1.25rem;
             grid-template-columns: 1fr;
             width: 100%;
         }
@@ -91,19 +91,29 @@
         .tool-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 1.5rem;
             text-decoration: none;
             color: var(--text-color);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: flex;
-            gap: 1rem;
+            gap: 1.25rem;
             align-items: center;
+            box-shadow: var(--shadow);
         }
 
         .tool-card:hover {
             border-color: var(--text-color);
-            transform: translateX(4px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .tool-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .tool-card:active {
+            transform: translateY(0);
         }
 
         .tool-icon {
@@ -136,7 +146,7 @@
 
         @media (max-width: 768px) {
             .header {
-                padding: 1.5rem 1.5rem;
+                padding: 1.25rem 1.25rem;
             }
 
             .title {
@@ -147,8 +157,13 @@
                 padding: 1rem;
             }
 
+            .tools-grid {
+                gap: 1rem;
+            }
+
             .tool-card {
                 padding: 1.25rem;
+                border-radius: 10px;
             }
 
             .tool-icon {
@@ -167,6 +182,55 @@
         @media (min-width: 600px) {
             .tools-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 1.15rem;
+            }
+
+            .theme-toggle {
+                font-size: 1.25rem;
+                padding: 0.4rem;
+            }
+
+            .tool-card {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .tool-icon {
+                font-size: 1.5rem;
+            }
+
+            .tool-title {
+                font-size: 1rem;
+            }
+
+            .tool-description {
+                font-size: 0.9rem;
+            }
+
+            .footer {
+                padding: 1.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Improve touch targets on mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .tool-card {
+                padding: 1.5rem;
+                min-height: 80px;
+            }
+
+            .theme-toggle {
+                padding: 0.75rem;
             }
         }
     </style>
@@ -232,22 +296,6 @@
                 <div class="tool-content">
                     <div class="tool-title">诗词寻觅</div>
                     <div class="tool-description">根据描述用 AI 寻找最合适的诗词，显示诗句和诗人</div>
-                </div>
-            </a>
-
-            <a href="share/index.html" class="tool-card">
-                <div class="tool-icon">🎨</div>
-                <div class="tool-content">
-                    <div class="tool-title">分享卡片</div>
-                    <div class="tool-description">将链接转换成精美的分享卡片，支持音乐、播客、文章和纯文字</div>
-                </div>
-            </a>
-
-            <a href="twi/index.html" class="tool-card">
-                <div class="tool-icon">🐦</div>
-                <div class="tool-content">
-                    <div class="tool-title">Twi 笔记</div>
-                    <div class="tool-description">类似推特界面的笔记应用，支持发布、点赞和删除笔记</div>
                 </div>
             </a>
         </div>
