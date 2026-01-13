@@ -76,7 +76,7 @@ function handleTextareaInput() {
 }
 
 // Handle tweet submission
-function handleTweetSubmit() {
+async function handleTweetSubmit() {
     const text = composeTextarea.value.trim();
     
     if (text.length === 0 || text.length > 280) {
@@ -96,23 +96,29 @@ function handleTweetSubmit() {
     tweets.unshift(tweet);
     
     // Save to IndexedDB
-    saveTweets();
-    
-    // Clear textarea
-    composeTextarea.value = '';
-    charCount.textContent = '0';
-    tweetBtn.disabled = true;
-    charCounter.classList.remove('warning', 'error');
-    
-    // Re-render timeline
-    renderTimeline();
-    updateStats();
-    
-    // Show success toast
-    showToast('推文已发布！');
-    
-    // Focus back on textarea
-    composeTextarea.focus();
+    try {
+        await saveTweets();
+        
+        // Clear textarea
+        composeTextarea.value = '';
+        charCount.textContent = '0';
+        tweetBtn.disabled = true;
+        charCounter.classList.remove('warning', 'error');
+        
+        // Re-render timeline
+        renderTimeline();
+        updateStats();
+        
+        // Show success toast
+        showToast('推文已发布！');
+        
+        // Focus back on textarea
+        composeTextarea.focus();
+    } catch (error) {
+        // Remove tweet from array if save failed
+        tweets.shift();
+        console.error('Failed to save tweet:', error);
+    }
 }
 
 // Render timeline
@@ -188,29 +194,46 @@ function createTweetElement(tweet) {
 }
 
 // Handle like
-function handleLike(tweetId) {
+async function handleLike(tweetId) {
     const tweet = tweets.find(t => t.id === tweetId);
     if (!tweet) return;
     
     tweet.liked = !tweet.liked;
     tweet.likes = tweet.liked ? tweet.likes + 1 : tweet.likes - 1;
     
-    saveTweets();
-    renderTimeline();
-    updateStats();
+    try {
+        await saveTweets();
+        renderTimeline();
+        updateStats();
+    } catch (error) {
+        // Revert changes if save failed
+        tweet.liked = !tweet.liked;
+        tweet.likes = tweet.liked ? tweet.likes + 1 : tweet.likes - 1;
+        console.error('Failed to update like:', error);
+    }
 }
 
 // Handle delete
-function handleDelete(tweetId) {
+async function handleDelete(tweetId) {
     if (!confirm('确定要删除这条推文吗？')) {
         return;
     }
     
+    const originalTweets = [...tweets];
     tweets = tweets.filter(t => t.id !== tweetId);
-    saveTweets();
-    renderTimeline();
-    updateStats();
-    showToast('推文已删除');
+    
+    try {
+        await saveTweets();
+        renderTimeline();
+        updateStats();
+        showToast('推文已删除');
+    } catch (error) {
+        // Restore tweets if save failed
+        tweets = originalTweets;
+        renderTimeline();
+        updateStats();
+        console.error('Failed to delete tweet:', error);
+    }
 }
 
 // Update statistics
@@ -263,25 +286,35 @@ function saveTweets() {
         const clearRequest = objectStore.clear();
         
         clearRequest.onsuccess = () => {
-            // Add all tweets
-            let addedCount = 0;
-            tweets.forEach(tweet => {
-                const addRequest = objectStore.add(tweet);
-                addRequest.onsuccess = () => {
-                    addedCount++;
-                    if (addedCount === tweets.length) {
-                        resolve();
-                    }
-                };
-                addRequest.onerror = () => {
-                    console.error('Failed to add tweet:', addRequest.error);
-                };
-            });
-            
             // Handle empty tweets array
             if (tweets.length === 0) {
                 resolve();
+                return;
             }
+            
+            // Add all tweets
+            let addedCount = 0;
+            let hasError = false;
+            
+            tweets.forEach(tweet => {
+                const addRequest = objectStore.add(tweet);
+                
+                addRequest.onsuccess = () => {
+                    addedCount++;
+                    if (addedCount === tweets.length && !hasError) {
+                        resolve();
+                    }
+                };
+                
+                addRequest.onerror = () => {
+                    if (!hasError) {
+                        hasError = true;
+                        console.error('Failed to add tweet:', addRequest.error);
+                        showToast('保存失败');
+                        reject(addRequest.error);
+                    }
+                };
+            });
         };
         
         clearRequest.onerror = () => {
