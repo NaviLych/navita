@@ -118,6 +118,7 @@ async function handleTweetSubmit() {
         // Remove tweet from array if save failed
         tweets.shift();
         console.error('Failed to save tweet:', error);
+        showToast('推文发布失败');
     }
 }
 
@@ -209,7 +210,10 @@ async function handleLike(tweetId) {
         // Revert changes if save failed
         tweet.liked = !tweet.liked;
         tweet.likes = tweet.liked ? tweet.likes + 1 : tweet.likes - 1;
+        renderTimeline();
+        updateStats();
         console.error('Failed to update like:', error);
+        showToast('点赞操作失败');
     }
 }
 
@@ -233,6 +237,7 @@ async function handleDelete(tweetId) {
         renderTimeline();
         updateStats();
         console.error('Failed to delete tweet:', error);
+        showToast('删除失败');
     }
 }
 
