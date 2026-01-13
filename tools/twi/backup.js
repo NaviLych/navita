@@ -233,8 +233,8 @@ class BackupManager {
         }
 
         try {
-            // Check if CloudKit is available
-            if (typeof CloudKit === 'undefined') {
+            // Check if CloudKit is available (with better checking)
+            if (typeof window.CloudKit === 'undefined' && typeof CloudKit === 'undefined') {
                 // Fallback: use local download and inform user to manually upload to iCloud
                 await this.exportToFile();
                 showToast('请将下载的备份文件手动上传到iCloud Drive');
@@ -291,7 +291,13 @@ class BackupManager {
             input.accept = '.json';
             
             return new Promise((resolve) => {
+                // Set a timeout to handle cancellation
+                let resolved = false;
+                
                 input.onchange = async (e) => {
+                    if (resolved) return;
+                    resolved = true;
+                    
                     const file = e.target.files[0];
                     if (file) {
                         const success = await this.importFromFile(file);
@@ -301,7 +307,17 @@ class BackupManager {
                     }
                 };
                 
-                input.oncancel = () => resolve(false);
+                // Handle cancellation via focus event (user closed dialog without selecting)
+                const handleCancel = () => {
+                    setTimeout(() => {
+                        if (!resolved && input.files.length === 0) {
+                            resolved = true;
+                            resolve(false);
+                        }
+                    }, 500);
+                };
+                
+                window.addEventListener('focus', handleCancel, { once: true });
                 input.click();
             });
         } catch (error) {
