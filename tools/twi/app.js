@@ -43,6 +43,16 @@ function attachEventListeners() {
     // Theme toggle
     themeToggle.addEventListener('click', toggleTheme);
     
+    // Backup toggle
+    const backupToggle = document.getElementById('backupToggle');
+    if (backupToggle) {
+        backupToggle.addEventListener('click', () => {
+            if (window.backupManager) {
+                window.backupManager.showBackupDialog();
+            }
+        });
+    }
+    
     // Enter key to submit (with Shift+Enter for new line)
     composeTextarea.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
