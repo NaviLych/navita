@@ -562,7 +562,6 @@ body {
     }
 
     .main-content {
-        width: 100%;
         max-width: 100%;
         order: 1;
         padding-bottom: calc(60px + env(safe-area-inset-bottom));
