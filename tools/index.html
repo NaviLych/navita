@@ -305,14 +305,24 @@
         .loading {
             opacity: 0.5;
         }
+
+        /* Status row elements */
+        .status-spacer {
+            width: 40px;
+        }
+
+        .status-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
     <!-- Status Bar with Theme Toggle -->
     <div class="status-bar">
         <div class="status-row">
-            <div style="width: 40px;"></div>
-            <div style="font-size: 0.9rem; color: var(--text-secondary);">工具导航</div>
+            <div class="status-spacer"></div>
+            <div class="status-title">工具导航</div>
             <button class="theme-toggle" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
         </div>
     </div>
@@ -446,11 +456,26 @@
             'Haze': '🌫️'
         };
 
-        // Fetch weather using OpenWeatherMap API (requires user location)
-        async function fetchWeather(lat, lon) {
+        // Fetch weather using wttr.in API (no API key needed)
+        async function fetchWeather() {
             try {
                 // Using free weather API - wttr.in (no API key needed)
-                const response = await fetch(`https://wttr.in/?format=j1`);
+                const response = await fetch(`https://wttr.in/?format=j1`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                // Validate response
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid content type received');
+                }
+                
                 const data = await response.json();
                 
                 if (data && data.current_condition && data.current_condition[0]) {
@@ -459,49 +484,57 @@
                     const desc = current.weatherDesc[0].value;
                     const location = data.nearest_area[0].areaName[0].value;
                     
-                    // Determine weather icon
+                    // Determine weather icon with case-insensitive matching
                     let icon = '🌤️';
+                    const descLower = desc.toLowerCase();
                     for (const [key, value] of Object.entries(weatherIcons)) {
-                        if (desc.includes(key)) {
+                        if (descLower.includes(key.toLowerCase())) {
                             icon = value;
                             break;
                         }
                     }
                     
-                    weatherInfo.innerHTML = `
-                        <span class="weather-icon">${icon}</span>
-                        <span class="weather-temp">${temp}°C</span>
-                        <span class="weather-desc">${desc}</span>
-                    `;
+                    // Create text nodes to prevent XSS
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'weather-icon';
+                    iconSpan.textContent = icon;
+                    
+                    const tempSpan = document.createElement('span');
+                    tempSpan.className = 'weather-temp';
+                    tempSpan.textContent = `${temp}°C`;
+                    
+                    const descSpan = document.createElement('span');
+                    descSpan.className = 'weather-desc';
+                    descSpan.textContent = desc;
+                    
+                    weatherInfo.innerHTML = '';
+                    weatherInfo.appendChild(iconSpan);
+                    weatherInfo.appendChild(tempSpan);
+                    weatherInfo.appendChild(descSpan);
                     weatherLocation.textContent = location;
                 } else {
-                    throw new Error('Invalid weather data');
+                    throw new Error('Invalid weather data structure');
                 }
             } catch (error) {
                 console.error('Weather fetch error:', error);
                 // Fallback to simple display
-                weatherInfo.innerHTML = `
-                    <span class="weather-icon">🌤️</span>
-                    <span class="weather-desc">天气信息不可用</span>
-                `;
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'weather-icon';
+                iconSpan.textContent = '🌤️';
+                
+                const descSpan = document.createElement('span');
+                descSpan.className = 'weather-desc';
+                descSpan.textContent = '天气信息不可用';
+                
+                weatherInfo.innerHTML = '';
+                weatherInfo.appendChild(iconSpan);
+                weatherInfo.appendChild(descSpan);
                 weatherLocation.textContent = '';
             }
         }
 
-        // Get user location and fetch weather
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    fetchWeather(position.coords.latitude, position.coords.longitude);
-                },
-                (error) => {
-                    console.log('Location access denied, fetching weather by IP');
-                    fetchWeather();
-                }
-            );
-        } else {
-            fetchWeather();
-        }
+        // Fetch weather on page load
+        fetchWeather();
     </script>
 </body>
 </html>
