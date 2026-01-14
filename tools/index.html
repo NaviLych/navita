@@ -324,10 +324,10 @@
     <!-- Status Bar -->
     <div class="status-bar">
         <div class="status-left">
-            <span id="statusTime">12:00</span>
+            <span id="statusTime">00:00</span>
         </div>
         <div class="status-right">
-            <span id="battery">100%</span>
+            <span id="battery">🔋 100%</span>
         </div>
     </div>
 
@@ -425,8 +425,8 @@
         updateTime();
         setInterval(updateTime, 1000);
 
-        // Simulate battery (random for demo)
-        document.getElementById('battery').textContent = '🔋 ' + Math.floor(Math.random() * 30 + 70) + '%';
+        // Battery status (fixed value for demo)
+        document.getElementById('battery').textContent = '🔋 100%';
 
         // Weather API
         async function getWeather() {
