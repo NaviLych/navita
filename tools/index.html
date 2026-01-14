@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工具导航</title>
+    <title>工具桌面</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #ffffff;
-            --text-color: #1a1a1a;
-            --text-secondary: #666666;
-            --border-color: #e0e0e0;
-            --card-bg: #f8f8f8;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --bg-color: #f0f4f8;
+            --text-color: #ffffff;
+            --text-secondary: #e0e0e0;
+            --card-bg: rgba(255, 255, 255, 0.15);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --backdrop-blur: blur(10px);
         }
 
         [data-theme="dark"] {
-            --bg-color: #1a1a1a;
-            --text-color: #f0f0f0;
-            --text-secondary: #999999;
-            --border-color: #333333;
-            --card-bg: #252525;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --bg-color: #0a0e1a;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -33,283 +32,365 @@
         }
 
         body {
-            font-family: 'EB Garamond', serif;
-            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: var(--text-color);
             min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background 0.3s ease;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        .header {
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        /* Status bar */
+        .status-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 2rem;
-        }
-
-        .title {
-            font-size: 1.5rem;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.85rem;
             font-weight: 500;
-            letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: var(--backdrop-blur);
         }
 
-        .theme-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: background-color 0.2s ease;
-        }
-
-        .theme-toggle:hover {
-            background-color: var(--card-bg);
-        }
-
-        .container {
-            flex: 1;
+        .status-left, .status-right {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 1.5rem;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
+            gap: 0.5rem;
         }
 
-        .tools-grid {
-            display: grid;
-            gap: 1.25rem;
-            grid-template-columns: 1fr;
-            width: 100%;
+        /* Top Section - Time and Weather */
+        .top-section {
+            padding: 2rem 1.5rem;
+            text-align: center;
         }
 
-        .tool-card {
+        .time-display {
+            font-size: 5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .date-display {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .weather-widget {
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            backdrop-filter: var(--backdrop-blur);
+            border-radius: 20px;
             padding: 1.5rem;
-            text-decoration: none;
-            color: var(--text-color);
-            transition: all 0.3s ease;
-            display: flex;
-            gap: 1.25rem;
-            align-items: center;
+            max-width: 400px;
+            margin: 0 auto;
             box-shadow: var(--shadow);
         }
 
-        .tool-card:hover {
-            border-color: var(--text-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        .weather-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
         }
 
-        [data-theme="dark"] .tool-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        .weather-temp {
+            font-size: 3rem;
+            font-weight: 300;
         }
 
-        .tool-card:active {
-            transform: translateY(0);
+        .weather-icon {
+            font-size: 3.5rem;
         }
 
-        .tool-icon {
-            font-size: 2rem;
-            flex-shrink: 0;
+        .weather-details {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
         }
 
-        .tool-content {
+        .weather-detail {
             flex: 1;
+            text-align: center;
         }
 
-        .tool-title {
-            font-size: 1.2rem;
-            font-weight: 500;
+        .weather-label {
+            opacity: 0.7;
+            font-size: 0.8rem;
             margin-bottom: 0.25rem;
         }
 
-        .tool-description {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        .footer {
-            padding: 2rem;
+        .weather-loading {
             text-align: center;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            padding: 1rem;
+            opacity: 0.7;
         }
 
+        /* Apps Section */
+        .apps-section {
+            flex: 1;
+            padding: 1rem 1.5rem 2rem;
+            overflow-y: auto;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .app-icon {
+            text-decoration: none;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .app-icon:active {
+            transform: scale(0.95);
+        }
+
+        .app-icon-bg {
+            width: 70px;
+            height: 70px;
+            background: var(--card-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .app-icon:hover .app-icon-bg {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .app-name {
+            font-size: 0.8rem;
+            text-align: center;
+            max-width: 80px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--card-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Responsive design */
         @media (max-width: 768px) {
-            .header {
-                padding: 1.25rem 1.25rem;
+            .time-display {
+                font-size: 4rem;
             }
 
-            .title {
-                font-size: 1.25rem;
+            .weather-temp {
+                font-size: 2.5rem;
             }
 
-            .container {
-                padding: 1rem;
+            .weather-icon {
+                font-size: 3rem;
             }
 
-            .tools-grid {
-                gap: 1rem;
+            .apps-grid {
+                gap: 1.25rem;
             }
 
-            .tool-card {
-                padding: 1.25rem;
-                border-radius: 10px;
-            }
-
-            .tool-icon {
-                font-size: 1.75rem;
-            }
-
-            .tool-title {
-                font-size: 1.1rem;
-            }
-
-            .tool-description {
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (min-width: 600px) {
-            .tools-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .app-icon-bg {
+                width: 65px;
+                height: 65px;
+                font-size: 2.2rem;
             }
         }
 
         @media (max-width: 480px) {
-            .header {
-                padding: 1rem;
+            .status-bar {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
             }
 
-            .title {
-                font-size: 1.15rem;
+            .top-section {
+                padding: 1.5rem 1rem;
             }
 
-            .theme-toggle {
-                font-size: 1.25rem;
-                padding: 0.4rem;
+            .time-display {
+                font-size: 3.5rem;
             }
 
-            .tool-card {
-                padding: 1rem;
-                gap: 1rem;
-            }
-
-            .tool-icon {
-                font-size: 1.5rem;
-            }
-
-            .tool-title {
+            .date-display {
                 font-size: 1rem;
             }
 
-            .tool-description {
-                font-size: 0.9rem;
+            .weather-widget {
+                padding: 1rem;
             }
 
-            .footer {
-                padding: 1.5rem 1rem;
-                font-size: 0.85rem;
+            .weather-temp {
+                font-size: 2rem;
             }
-        }
 
-        /* Improve touch targets on mobile */
-        @media (hover: none) and (pointer: coarse) {
-            .tool-card {
-                padding: 1.5rem;
-                min-height: 80px;
+            .weather-icon {
+                font-size: 2.5rem;
+            }
+
+            .apps-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1rem;
+            }
+
+            .app-icon-bg {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+                border-radius: 15px;
+            }
+
+            .app-name {
+                font-size: 0.75rem;
             }
 
             .theme-toggle {
-                padding: 0.75rem;
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
             }
+        }
+
+        @media (min-width: 769px) {
+            .apps-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 600px;
+            }
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .apps-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        .apps-section {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1 class="title">工具导航</h1>
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle dark mode">🌙</button>
-    </header>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span id="statusTime">12:00</span>
+        </div>
+        <div class="status-right">
+            <span id="battery">100%</span>
+        </div>
+    </div>
 
-    <div class="container">
-        <div class="tools-grid">
-            <a href="epub/index.html" class="tool-card">
-                <div class="tool-icon">📚</div>
-                <div class="tool-content">
-                    <div class="tool-title">EPUB 拆分工具</div>
-                    <div class="tool-description">将大型 EPUB 文件拆分为多个小文件，便于管理和阅读</div>
-                </div>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
+
+    <!-- Top Section: Time and Weather -->
+    <div class="top-section">
+        <div class="time-display" id="mainTime">00:00</div>
+        <div class="date-display" id="dateDisplay">星期一, 1月1日</div>
+        
+        <div class="weather-widget">
+            <div id="weatherContent" class="weather-loading">
+                <div>正在获取天气信息...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Apps Section -->
+    <div class="apps-section">
+        <div class="apps-grid">
+            <a href="epub/index.html" class="app-icon">
+                <div class="app-icon-bg">📚</div>
+                <div class="app-name">EPUB拆分</div>
             </a>
 
-            <a href="pdf/index.html" class="tool-card">
-                <div class="tool-icon">📄</div>
-                <div class="tool-content">
-                    <div class="tool-title">PDF 转 EPUB</div>
-                    <div class="tool-description">将 PDF 文档转换为 EPUB 格式，优化阅读体验</div>
-                </div>
+            <a href="pdf/index.html" class="app-icon">
+                <div class="app-icon-bg">📄</div>
+                <div class="app-name">PDF转换</div>
             </a>
 
-            <a href="dice/index.html" class="tool-card">
-                <div class="tool-icon">🎲</div>
-                <div class="tool-content">
-                    <div class="tool-title">骰子</div>
-                    <div class="tool-description">在线投掷骰子，支持多种骰子类型</div>
-                </div>
+            <a href="dice/index.html" class="app-icon">
+                <div class="app-icon-bg">🎲</div>
+                <div class="app-name">骰子</div>
             </a>
 
-            <a href="breath/index.html" class="tool-card">
-                <div class="tool-icon">🌬️</div>
-                <div class="tool-content">
-                    <div class="tool-title">呼吸光环</div>
-                    <div class="tool-description">3 分钟呼吸引导练习，支持多种呼吸节奏和环境音</div>
-                </div>
+            <a href="breath/index.html" class="app-icon">
+                <div class="app-icon-bg">🌬️</div>
+                <div class="app-name">呼吸光环</div>
             </a>
 
-            <a href="read/index.html" class="tool-card">
-                <div class="tool-icon">📚</div>
-                <div class="tool-content">
-                    <div class="tool-title">稍后读</div>
-                    <div class="tool-description">阅读管理工具，支持稍后读、打卡、阅读笔记和推荐系统</div>
-                </div>
+            <a href="read/index.html" class="app-icon">
+                <div class="app-icon-bg">📖</div>
+                <div class="app-name">稍后读</div>
             </a>
 
-            <a href="very/index.html" class="tool-card">
-                <div class="tool-icon">✨</div>
-                <div class="tool-content">
-                    <div class="tool-title">Better than Very</div>
-                    <div class="tool-description">Find powerful alternatives to "very + adjective" combinations using AI</div>
-                </div>
+            <a href="very/index.html" class="app-icon">
+                <div class="app-icon-bg">✨</div>
+                <div class="app-name">Better Very</div>
             </a>
 
-            <a href="poetry/index.html" class="tool-card">
-                <div class="tool-icon">📜</div>
-                <div class="tool-content">
-                    <div class="tool-title">诗词寻觅</div>
-                    <div class="tool-description">根据描述用 AI 寻找最合适的诗词，显示诗句和诗人</div>
-                </div>
+            <a href="poetry/index.html" class="app-icon">
+                <div class="app-icon-bg">📜</div>
+                <div class="app-name">诗词寻觅</div>
             </a>
         </div>
     </div>
 
-    <footer class="footer">
-        <p>选择一个工具开始使用</p>
-    </footer>
-
     <script>
+        // Theme management
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
-
-        // Load theme from localStorage
+        
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             html.setAttribute('data-theme', 'dark');
@@ -323,6 +404,138 @@
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('theme', newTheme);
         });
+
+        // Time display
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            document.getElementById('mainTime').textContent = `${hours}:${minutes}`;
+            document.getElementById('statusTime').textContent = `${hours}:${minutes}`;
+            
+            // Update date
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[now.getDay()];
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            document.getElementById('dateDisplay').textContent = `${weekday}, ${month}月${date}日`;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Simulate battery (random for demo)
+        document.getElementById('battery').textContent = '🔋 ' + Math.floor(Math.random() * 30 + 70) + '%';
+
+        // Weather API
+        async function getWeather() {
+            const weatherContent = document.getElementById('weatherContent');
+            
+            try {
+                // Try to get user's location
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation not supported');
+                }
+
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                });
+
+                const { latitude, longitude } = position.coords;
+
+                // Using Open-Meteo API (free, no API key required)
+                const weatherResponse = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+                );
+
+                if (!weatherResponse.ok) {
+                    throw new Error('Weather API error');
+                }
+
+                const weatherData = await weatherResponse.json();
+                const current = weatherData.current;
+
+                // Weather code to emoji mapping
+                const weatherIcons = {
+                    0: '☀️',   // Clear sky
+                    1: '🌤️',   // Mainly clear
+                    2: '⛅',   // Partly cloudy
+                    3: '☁️',   // Overcast
+                    45: '🌫️',  // Fog
+                    48: '🌫️',  // Depositing rime fog
+                    51: '🌦️',  // Light drizzle
+                    53: '🌧️',  // Moderate drizzle
+                    55: '🌧️',  // Dense drizzle
+                    61: '🌦️',  // Slight rain
+                    63: '🌧️',  // Moderate rain
+                    65: '🌧️',  // Heavy rain
+                    71: '🌨️',  // Slight snow
+                    73: '🌨️',  // Moderate snow
+                    75: '🌨️',  // Heavy snow
+                    77: '🌨️',  // Snow grains
+                    80: '🌦️',  // Slight rain showers
+                    81: '🌧️',  // Moderate rain showers
+                    82: '🌧️',  // Violent rain showers
+                    85: '🌨️',  // Slight snow showers
+                    86: '🌨️',  // Heavy snow showers
+                    95: '⛈️',  // Thunderstorm
+                    96: '⛈️',  // Thunderstorm with slight hail
+                    99: '⛈️'   // Thunderstorm with heavy hail
+                };
+
+                const weatherIcon = weatherIcons[current.weather_code] || '🌡️';
+                const temp = Math.round(current.temperature_2m);
+                const humidity = current.relative_humidity_2m;
+                const windSpeed = Math.round(current.wind_speed_10m);
+
+                weatherContent.innerHTML = `
+                    <div class="weather-main">
+                        <div>
+                            <div class="weather-temp">${temp}°C</div>
+                        </div>
+                        <div class="weather-icon">${weatherIcon}</div>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-detail">
+                            <div class="weather-label">湿度</div>
+                            <div>${humidity}%</div>
+                        </div>
+                        <div class="weather-detail">
+                            <div class="weather-label">风速</div>
+                            <div>${windSpeed} km/h</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Weather error:', error);
+                // Fallback to default display
+                weatherContent.innerHTML = `
+                    <div class="weather-main">
+                        <div>
+                            <div class="weather-temp">22°C</div>
+                        </div>
+                        <div class="weather-icon">🌤️</div>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-detail">
+                            <div class="weather-label">湿度</div>
+                            <div>60%</div>
+                        </div>
+                        <div class="weather-detail">
+                            <div class="weather-label">风速</div>
+                            <div>10 km/h</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load weather on page load
+        getWeather();
+        
+        // Refresh weather every 30 minutes
+        setInterval(getWeather, 30 * 60 * 1000);
     </script>
 </body>
 </html>
