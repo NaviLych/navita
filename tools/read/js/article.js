@@ -81,19 +81,19 @@ class ArticleManager {
                 const doc = parser.parseFromString(html, 'text/html');
                 
                 // Extract metadata with better fallbacks
-                const title = doc.querySelector('meta[property="og:title"]')?.content ||
-                             doc.querySelector('meta[name="twitter:title"]')?.content ||
+                const title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
+                             doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') ||
                              doc.querySelector('title')?.textContent ||
                              doc.querySelector('h1')?.textContent ||
                              '无标题';
                 
-                const excerpt = doc.querySelector('meta[property="og:description"]')?.content ||
-                               doc.querySelector('meta[name="twitter:description"]')?.content ||
-                               doc.querySelector('meta[name="description"]')?.content ||
+                const excerpt = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
+                               doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content') ||
+                               doc.querySelector('meta[name="description"]')?.getAttribute('content') ||
                                '';
                 
-                const cover = doc.querySelector('meta[property="og:image"]')?.content ||
-                             doc.querySelector('meta[name="twitter:image"]')?.content ||
+                const cover = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+                             doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
                              doc.querySelector('.article-content img')?.src ||
                              doc.querySelector('.post-content img')?.src ||
                              doc.querySelector('article img')?.src ||
