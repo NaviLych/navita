@@ -239,9 +239,14 @@ function completeTodo() {
     const confirmComplete = confirm(`确定要完成任务"${todo.name}"吗？完成后将从列表中移除。`);
     if (!confirmComplete) return;
     
-    // Stop timer if running
+    // Stop timer if running (without showing completion section)
     if (state.timerRunning) {
-        pauseTimer();
+        state.timerRunning = false;
+        if (state.timerInterval) {
+            clearInterval(state.timerInterval);
+            state.timerInterval = null;
+        }
+        saveCurrentTodoTime();
     }
     
     // Remove the todo from the list
