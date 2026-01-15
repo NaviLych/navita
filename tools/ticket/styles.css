@@ -442,6 +442,38 @@ body {
     display: none;
 }
 
+.completion-section {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.completion-section.hidden {
+    display: none;
+}
+
+.completion-message {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.complete-btn {
+    background: var(--success-color);
+    color: white;
+    width: 100%;
+}
+
+.complete-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.complete-btn:active {
+    transform: translateY(0);
+}
+
 .ticket-footer {
     text-align: center;
     color: var(--text-secondary);
