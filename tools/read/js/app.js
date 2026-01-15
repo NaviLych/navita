@@ -40,23 +40,16 @@ class App {
             await checkinManager.checkin();
         });
 
-        // Search
-        const searchInput = document.getElementById('search-input');
-        const searchBtn = document.getElementById('search-btn');
-        
-        const performSearch = () => {
-            const query = searchInput.value.trim();
-            if (query) {
-                router.navigate(`/search?query=${encodeURIComponent(query)}`);
-            }
-        };
-
-        searchBtn.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
+        // FAB button
+        const fab = document.getElementById('fab');
+        if (fab) {
+            fab.addEventListener('click', () => {
+                const currentRoute = router.getCurrentRoute();
+                if (currentRoute === '/home' || currentRoute === '/read-later') {
+                    this.showAddArticleModal();
+                }
+            });
+        }
 
         // Global card action handlers
         document.addEventListener('click', async (e) => {
@@ -112,6 +105,17 @@ class App {
         });
     }
 
+    updateFAB(show = true) {
+        const fab = document.getElementById('fab');
+        if (fab) {
+            if (show) {
+                fab.classList.remove('hidden');
+            } else {
+                fab.classList.add('hidden');
+            }
+        }
+    }
+
     async renderHome(params) {
         const main = document.getElementById('main-content');
         
@@ -119,7 +123,6 @@ class App {
             <div class="home-page">
                 <div class="page-header">
                     <h2>首页</h2>
-                    <button class="btn btn-primary" id="add-article-btn">➕ 添加文章</button>
                 </div>
                 
                 <div class="category-tabs">
@@ -140,10 +143,8 @@ class App {
             </div>
         `;
 
-        // Add article button
-        document.getElementById('add-article-btn').addEventListener('click', () => {
-            this.showAddArticleModal();
-        });
+        // Show FAB
+        this.updateFAB(true);
 
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -282,7 +283,6 @@ class App {
             <div class="read-later-page">
                 <div class="page-header">
                     <h2>稍后读</h2>
-                    <button class="btn btn-primary" id="batch-mode-btn">批量操作</button>
                 </div>
                 
                 <div class="filters-bar">
@@ -303,16 +303,12 @@ class App {
                     </label>
                 </div>
                 
-                <div id="batch-actions" class="batch-actions hidden">
-                    <button class="btn btn-sm" id="select-all-btn">全选</button>
-                    <button class="btn btn-sm" id="batch-star-btn">星标</button>
-                    <button class="btn btn-sm" id="batch-complete-btn">标记完成</button>
-                    <button class="btn btn-sm btn-danger" id="batch-delete-btn">删除</button>
-                </div>
-                
                 <div id="read-later-list"></div>
             </div>
         `;
+
+        // Show FAB
+        this.updateFAB(true);
 
         // Load tags
         const tags = await readLaterManager.getAllTags();
@@ -329,20 +325,6 @@ class App {
         document.getElementById('status-filter').addEventListener('change', loadFiltered);
         document.getElementById('tag-filter').addEventListener('change', loadFiltered);
         document.getElementById('starred-filter').addEventListener('change', loadFiltered);
-
-        // Batch mode
-        let batchMode = false;
-        const batchModeBtn = document.getElementById('batch-mode-btn');
-        const batchActions = document.getElementById('batch-actions');
-        
-        batchModeBtn.addEventListener('click', () => {
-            batchMode = !batchMode;
-            batchActions.classList.toggle('hidden', !batchMode);
-            batchModeBtn.textContent = batchMode ? '取消批量' : '批量操作';
-            document.querySelectorAll('.article-card').forEach(card => {
-                card.classList.toggle('batch-mode', batchMode);
-            });
-        });
 
         // Load initial list
         await this.loadReadLaterList();
@@ -379,6 +361,9 @@ class App {
     }
 
     async renderArticle(params) {
+        // Hide FAB
+        this.updateFAB(false);
+        
         // Extract article ID from hash
         const hash = window.location.hash;
         const match = hash.match(/\/article\/(\d+)/);
@@ -409,13 +394,13 @@ class App {
                         ${!readLaterItem ? `
                             <button class="btn" id="add-to-readlater-btn">加入稍后读</button>
                         ` : `
-                            <button class="btn ${readLaterItem.starred ? 'active' : ''}" id="toggle-star-btn">
-                                ${readLaterItem.starred ? '⭐ 已星标' : '☆ 星标'}
+                            <button class="btn-icon ${readLaterItem.starred ? 'active' : ''}" id="toggle-star-btn">
+                                ${readLaterItem.starred ? '⭐' : '☆'}
                             </button>
                             ${readLaterItem.status !== 'done' ? `
-                                <button class="btn btn-primary" id="mark-complete-btn">✓ 标记完成</button>
+                                <button class="btn btn-primary" id="mark-complete-btn">✓</button>
                             ` : `
-                                <span class="badge">✓ 已完成</span>
+                                <span class="badge">✓</span>
                             `}
                         `}
                     </div>
@@ -561,6 +546,9 @@ class App {
     }
 
     async renderCheckin(params) {
+        // Hide FAB
+        this.updateFAB(false);
+        
         const main = document.getElementById('main-content');
         
         const todayCheckin = await checkinManager.getTodayCheckin();
@@ -700,6 +688,9 @@ class App {
     }
 
     async renderStats(params) {
+        // Hide FAB
+        this.updateFAB(false);
+        
         const main = document.getElementById('main-content');
         
         UI.showLoading();
@@ -815,6 +806,9 @@ class App {
     }
 
     async renderSettings(params) {
+        // Hide FAB
+        this.updateFAB(false);
+        
         const main = document.getElementById('main-content');
         
         const settings = await database.getSettings();
