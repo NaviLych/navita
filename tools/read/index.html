@@ -2,20 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>稍后读 - 阅读管理工具</title>
     <meta name="description" content="纯前端阅读管理工具，支持稍后读、打卡、阅读笔记">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="stylesheet" href="css/main.css">
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#007AFF">
 </head>
 <body>
     <div id="app">
-        <!-- Navigation header -->
+        <!-- Simple header -->
         <header id="header" class="header">
             <div class="header-content">
                 <h1 class="logo">稍后读</h1>
@@ -24,25 +23,26 @@
                         <span class="icon">📅</span>
                         <span class="label">签到</span>
                     </button>
-                    <div class="search-box">
-                        <input type="text" id="search-input" placeholder="搜索文章...">
-                        <button id="search-btn" class="btn-search">🔍</button>
-                    </div>
                 </div>
             </div>
-            <nav class="main-nav">
-                <a href="#/home" class="nav-item active" data-route="home">首页</a>
-                <a href="#/read-later" class="nav-item" data-route="read-later">稍后读</a>
-                <a href="#/checkin" class="nav-item" data-route="checkin">打卡</a>
-                <a href="#/stats" class="nav-item" data-route="stats">统计</a>
-                <a href="#/settings" class="nav-item" data-route="settings">设置</a>
-            </nav>
         </header>
 
         <!-- Main content area -->
         <main id="main-content" class="main-content">
             <!-- Dynamic content will be loaded here -->
         </main>
+
+        <!-- Floating Action Button -->
+        <button id="fab" class="fab hidden">➕</button>
+
+        <!-- Bottom Navigation -->
+        <nav class="main-nav">
+            <a href="#/home" class="nav-item active" data-route="home" data-icon="🏠">首页</a>
+            <a href="#/read-later" class="nav-item" data-route="read-later" data-icon="📚">稍后读</a>
+            <a href="#/checkin" class="nav-item" data-route="checkin" data-icon="✓">打卡</a>
+            <a href="#/stats" class="nav-item" data-route="stats" data-icon="📊">统计</a>
+            <a href="#/settings" class="nav-item" data-route="settings" data-icon="⚙️">设置</a>
+        </nav>
 
         <!-- Loading indicator -->
         <div id="loading" class="loading hidden">
