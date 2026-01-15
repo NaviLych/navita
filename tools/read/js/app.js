@@ -42,12 +42,14 @@ class App {
 
         // FAB button
         const fab = document.getElementById('fab');
-        fab.addEventListener('click', () => {
-            const currentRoute = router.getCurrentRoute();
-            if (currentRoute === '/home' || currentRoute === '/read-later') {
-                this.showAddArticleModal();
-            }
-        });
+        if (fab) {
+            fab.addEventListener('click', () => {
+                const currentRoute = router.getCurrentRoute();
+                if (currentRoute === '/home' || currentRoute === '/read-later') {
+                    this.showAddArticleModal();
+                }
+            });
+        }
 
         // Global card action handlers
         document.addEventListener('click', async (e) => {
@@ -105,10 +107,12 @@ class App {
 
     updateFAB(show = true) {
         const fab = document.getElementById('fab');
-        if (show) {
-            fab.classList.remove('hidden');
-        } else {
-            fab.classList.add('hidden');
+        if (fab) {
+            if (show) {
+                fab.classList.remove('hidden');
+            } else {
+                fab.classList.add('hidden');
+            }
         }
     }
 

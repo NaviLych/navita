@@ -971,7 +971,6 @@ body {
     background: var(--input-bg);
     font-size: 13px;
 }
-}
 
 /* Settings Page */
 .settings-section {
@@ -1070,6 +1069,18 @@ body {
     }
     to {
         transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-container {
+        animation: none;
+    }
+    
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
 
