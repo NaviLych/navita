@@ -37,7 +37,9 @@ const elements = {
     startBtn: document.getElementById('startBtn'),
     pauseBtn: document.getElementById('pauseBtn'),
     resetBtn: document.getElementById('resetBtn'),
-    themeToggleFocus: document.getElementById('themeToggleFocus')
+    themeToggleFocus: document.getElementById('themeToggleFocus'),
+    completionSection: document.getElementById('completionSection'),
+    completeBtn: document.getElementById('completeBtn')
 };
 
 // Initialize app
@@ -59,6 +61,7 @@ function init() {
     elements.startBtn.addEventListener('click', startTimer);
     elements.pauseBtn.addEventListener('click', pauseTimer);
     elements.resetBtn.addEventListener('click', resetTimer);
+    elements.completeBtn.addEventListener('click', completeTodo);
 
     // Render todos
     renderTodos();
@@ -132,6 +135,9 @@ function backToList() {
         pauseTimer();
     }
     
+    // Hide completion section
+    elements.completionSection.classList.add('hidden');
+    
     // Switch back to list view
     elements.focusView.classList.add('hidden');
     elements.listView.classList.remove('hidden');
@@ -174,6 +180,9 @@ function startTimer() {
     elements.startBtn.classList.add('hidden');
     elements.pauseBtn.classList.remove('hidden');
     
+    // Hide completion section when timer starts
+    elements.completionSection.classList.add('hidden');
+    
     state.timerInterval = setInterval(() => {
         state.timerSeconds++;
         updateTimerDisplay();
@@ -199,6 +208,9 @@ function pauseTimer() {
     }
     
     saveCurrentTodoTime();
+    
+    // Show completion option when timer is paused
+    elements.completionSection.classList.remove('hidden');
 }
 
 function resetTimer() {
@@ -213,6 +225,41 @@ function resetTimer() {
     // Reset display
     state.timerSeconds = 0;
     updateTimerDisplay();
+    
+    // Show completion option when resetting
+    elements.completionSection.classList.remove('hidden');
+}
+
+function completeTodo() {
+    if (state.currentTodoId === null) return;
+    
+    const todo = state.todos.find(t => t.id === state.currentTodoId);
+    if (!todo) return;
+    
+    const confirmComplete = confirm(`确定要完成任务"${todo.name}"吗？完成后将从列表中移除。`);
+    if (!confirmComplete) return;
+    
+    // Stop timer if running
+    if (state.timerRunning) {
+        pauseTimer();
+    }
+    
+    // Remove the todo from the list
+    state.todos = state.todos.filter(t => t.id !== state.currentTodoId);
+    saveTodos();
+    
+    // Return to list view
+    elements.focusView.classList.add('hidden');
+    elements.listView.classList.remove('hidden');
+    
+    state.currentTodoId = null;
+    state.timerSeconds = 0;
+    
+    // Hide completion section
+    elements.completionSection.classList.add('hidden');
+    
+    // Refresh the todo list
+    renderTodos();
 }
 
 function saveCurrentTodoTime() {
