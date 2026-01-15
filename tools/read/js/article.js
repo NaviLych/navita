@@ -3,6 +3,10 @@ import database from './db.js';
 import UI from './ui.js';
 
 class ArticleManager {
+    // Constants for content extraction
+    static MAX_EXCERPT_LENGTH = 300;
+    static MAX_CONTENT_LENGTH = 50000;
+    
     async addArticle(url, manualData = null) {
         try {
             // Check if article already exists
@@ -48,46 +52,86 @@ class ArticleManager {
     }
 
     async fetchAndParse(url) {
-        // Note: Due to CORS restrictions, this will fail for most websites
-        // In a real implementation, you'd need a proxy or browser extension
+        // Try multiple methods to fetch content, including CORS proxies
+        const proxies = [
+            null, // Try direct fetch first
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+        ];
         
+        let lastError = null;
+        
+        for (const proxy of proxies) {
+            try {
+                const fetchUrl = proxy ? `${proxy}${encodeURIComponent(url)}` : url;
+                const response = await fetch(fetchUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const html = await response.text();
+                
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract metadata with better fallbacks
+                const title = doc.querySelector('meta[property="og:title"]')?.content ||
+                             doc.querySelector('meta[name="twitter:title"]')?.content ||
+                             doc.querySelector('title')?.textContent ||
+                             doc.querySelector('h1')?.textContent ||
+                             '无标题';
+                
+                const excerpt = doc.querySelector('meta[property="og:description"]')?.content ||
+                               doc.querySelector('meta[name="twitter:description"]')?.content ||
+                               doc.querySelector('meta[name="description"]')?.content ||
+                               '';
+                
+                const cover = doc.querySelector('meta[property="og:image"]')?.content ||
+                             doc.querySelector('meta[name="twitter:image"]')?.content ||
+                             doc.querySelector('.article-content img')?.src ||
+                             doc.querySelector('.post-content img')?.src ||
+                             doc.querySelector('article img')?.src ||
+                             doc.querySelector('[role="main"] img')?.src ||
+                             '';
+                
+                // Simple content extraction (in production, use Readability.js)
+                const article = doc.querySelector('article') || doc.querySelector('main') || doc.body;
+                const content = article?.textContent || '';
+                
+                // Successfully parsed, return the data
+                return {
+                    url,
+                    title: title.trim(),
+                    excerpt: excerpt.substring(0, ArticleManager.MAX_EXCERPT_LENGTH),
+                    cover: cover ? this.resolveUrl(cover, url) : '',
+                    domain: UI.extractDomain(url),
+                    estReadTime: UI.estimateReadTime(content),
+                    content: content.substring(0, ArticleManager.MAX_CONTENT_LENGTH)
+                };
+            } catch (error) {
+                lastError = error;
+                // Continue to next proxy
+                continue;
+            }
+        }
+        
+        // All methods failed
+        throw new Error(`无法获取文章内容: ${lastError?.message || '未知错误'}`);
+    }
+    
+    resolveUrl(urlString, baseUrl) {
         try {
-            // Try to fetch with a proxy or directly
-            const response = await fetch(url);
-            const html = await response.text();
-            
-            // Parse HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Extract metadata
-            const title = doc.querySelector('title')?.textContent ||
-                         doc.querySelector('meta[property="og:title"]')?.content ||
-                         '无标题';
-            
-            const excerpt = doc.querySelector('meta[name="description"]')?.content ||
-                           doc.querySelector('meta[property="og:description"]')?.content ||
-                           '';
-            
-            const cover = doc.querySelector('meta[property="og:image"]')?.content ||
-                         doc.querySelector('img')?.src ||
-                         '';
-            
-            // Simple content extraction (in production, use Readability.js)
-            const article = doc.querySelector('article') || doc.querySelector('main') || doc.body;
-            const content = article?.textContent || '';
-            
-            return {
-                url,
-                title: title.trim(),
-                excerpt: excerpt.substring(0, 300),
-                cover: cover ? new URL(cover, url).href : '',
-                domain: UI.extractDomain(url),
-                estReadTime: UI.estimateReadTime(content),
-                content: content.substring(0, 50000) // Store first 50k chars
-            };
-        } catch (error) {
-            throw new Error('无法获取文章内容，可能存在跨域限制');
+            // Handle relative URLs
+            return new URL(urlString, baseUrl).href;
+        } catch (e) {
+            // If URL parsing fails, return empty string
+            return '';
         }
     }
 
