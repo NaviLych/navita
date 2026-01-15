@@ -1,11 +1,20 @@
 // State management
+let todos = [];
+try {
+    todos = JSON.parse(localStorage.getItem('todos')) || [];
+} catch (e) {
+    console.error('Failed to parse todos from localStorage:', e);
+    todos = [];
+}
+
 const state = {
     theme: localStorage.getItem('theme') || 'light',
-    todos: JSON.parse(localStorage.getItem('todos')) || [],
+    todos: todos,
     currentTodoId: null,
     timerRunning: false,
     timerSeconds: 0,
-    timerInterval: null
+    timerInterval: null,
+    lastSaveTime: 0
 };
 
 // DOM elements
@@ -75,7 +84,7 @@ function addTodo() {
     if (!text) return;
 
     const todo = {
-        id: Date.now(),
+        id: Date.now() + Math.random(), // Add entropy to prevent collisions
         name: text,
         createdAt: new Date().toISOString(),
         totalTime: 0 // in seconds
@@ -168,7 +177,12 @@ function startTimer() {
     state.timerInterval = setInterval(() => {
         state.timerSeconds++;
         updateTimerDisplay();
-        saveCurrentTodoTime();
+        // Throttle localStorage writes to every 10 seconds
+        const now = Date.now();
+        if (now - state.lastSaveTime >= 10000) {
+            saveCurrentTodoTime();
+            state.lastSaveTime = now;
+        }
     }, 1000);
 }
 
@@ -224,8 +238,9 @@ function updateTimerDisplay() {
 function formatTicketNumber(id) {
     // Generate a ticket number like A001, B023, etc.
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const num = id % 1000;
-    const letter = letters[Math.floor((id / 1000) % 26)];
+    const idInt = Math.floor(id); // Convert to integer
+    const num = idInt % 1000;
+    const letter = letters[Math.floor((idInt / 1000) % 26)];
     return `${letter}${String(num).padStart(3, '0')}`;
 }
 
