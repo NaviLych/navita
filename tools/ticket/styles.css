@@ -1,0 +1,557 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+    --card-bg: #f8f8f8;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --accent-color: #007aff;
+    --success-color: #34c759;
+    --danger-color: #ff3b30;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --text-secondary: #999999;
+    --border-color: #333333;
+    --card-bg: #252525;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --accent-color: #0a84ff;
+    --success-color: #30d158;
+    --danger-color: #ff453a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+}
+
+/* View Management */
+.view {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.view.hidden {
+    display: none;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.header-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.icon-btn:hover {
+    background-color: var(--card-bg);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Main Content */
+.container {
+    flex: 1;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Add Todo Form */
+.add-todo-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.todo-input {
+    flex: 1;
+    font-size: 1rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.todo-input:focus {
+    border-color: var(--accent-color);
+}
+
+.add-btn {
+    font-size: 1.5rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-btn:hover {
+    opacity: 0.9;
+}
+
+.add-btn:active {
+    transform: scale(0.95);
+}
+
+/* Todo List */
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.todo-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.todo-item:hover {
+    transform: translateY(-2px);
+}
+
+.todo-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.todo-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.todo-time {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.todo-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    opacity: 0.9;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.delete-btn {
+    background: var(--danger-color);
+    font-size: 1.25rem;
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Empty State */
+.empty-state {
+    display: none;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state.visible {
+    display: block;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-text {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+/* Focus View */
+.focus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-color);
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+    background-color: var(--card-bg);
+}
+
+.back-btn:active {
+    transform: scale(0.95);
+}
+
+/* Bank Ticket Style */
+.ticket-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.ticket {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    border: 2px dashed var(--border-color);
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ticket-brand {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.ticket-date {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.ticket-number-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.ticket-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.ticket-number {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--accent-color);
+    font-family: 'Courier New', monospace;
+}
+
+.ticket-task-section {
+    margin-bottom: 2rem;
+}
+
+.ticket-task-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.ticket-task-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-color);
+    border-radius: 8px;
+}
+
+.ticket-divider {
+    height: 2px;
+    background: var(--border-color);
+    margin: 2rem 0;
+    position: relative;
+}
+
+.ticket-divider::before,
+.ticket-divider::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--bg-color);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.ticket-divider::before {
+    left: -32px;
+}
+
+.ticket-divider::after {
+    right: -32px;
+}
+
+.timer-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.timer-display {
+    font-size: 4rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 0.5rem;
+}
+
+.timer-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.timer-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.control-btn {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.start-btn {
+    background: var(--success-color);
+    color: white;
+}
+
+.pause-btn {
+    background: var(--accent-color);
+    color: white;
+}
+
+.reset-btn {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.control-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.control-btn.hidden {
+    display: none;
+}
+
+.ticket-footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.ticket-tip {
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .title {
+        font-size: 1.25rem;
+    }
+
+    .container {
+        padding: 1.5rem;
+    }
+
+    .ticket {
+        padding: 1.5rem;
+    }
+
+    .ticket-number {
+        font-size: 3rem;
+    }
+
+    .timer-display {
+        font-size: 3rem;
+    }
+
+    .ticket-task-name {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header,
+    .focus-header {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 1.1rem;
+    }
+
+    .icon-btn {
+        font-size: 1.25rem;
+        padding: 0.375rem;
+    }
+
+    .container,
+    .ticket-container {
+        padding: 1rem;
+    }
+
+    .add-todo-container {
+        gap: 0.5rem;
+    }
+
+    .add-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+
+    .todo-item {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .todo-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .action-btn {
+        flex: 1;
+    }
+
+    .ticket {
+        padding: 1rem;
+    }
+
+    .ticket-number {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+    }
+
+    .timer-display {
+        font-size: 2.5rem;
+    }
+
+    .ticket-task-name {
+        font-size: 1.1rem;
+    }
+
+    .timer-controls {
+        flex-direction: column;
+    }
+
+    .control-btn {
+        width: 100%;
+    }
+}
