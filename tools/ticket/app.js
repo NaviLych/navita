@@ -1,0 +1,294 @@
+// State management
+let todos = [];
+try {
+    todos = JSON.parse(localStorage.getItem('todos')) || [];
+} catch (e) {
+    console.error('Failed to parse todos from localStorage:', e);
+    todos = [];
+}
+
+const state = {
+    theme: localStorage.getItem('theme') || 'light',
+    todos: todos,
+    currentTodoId: null,
+    timerRunning: false,
+    timerSeconds: 0,
+    timerInterval: null,
+    lastSaveTime: 0
+};
+
+// DOM elements
+const elements = {
+    // List view
+    listView: document.getElementById('listView'),
+    todoInput: document.getElementById('todoInput'),
+    addBtn: document.getElementById('addBtn'),
+    todoList: document.getElementById('todoList'),
+    emptyState: document.getElementById('emptyState'),
+    themeToggle: document.getElementById('themeToggle'),
+    
+    // Focus view
+    focusView: document.getElementById('focusView'),
+    backBtn: document.getElementById('backBtn'),
+    ticketDate: document.getElementById('ticketDate'),
+    ticketNumber: document.getElementById('ticketNumber'),
+    ticketTaskName: document.getElementById('ticketTaskName'),
+    timerDisplay: document.getElementById('timerDisplay'),
+    startBtn: document.getElementById('startBtn'),
+    pauseBtn: document.getElementById('pauseBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    themeToggleFocus: document.getElementById('themeToggleFocus')
+};
+
+// Initialize app
+function init() {
+    // Set initial theme
+    document.documentElement.setAttribute('data-theme', state.theme);
+    updateThemeIcon();
+
+    // Event listeners
+    elements.themeToggle.addEventListener('click', toggleTheme);
+    elements.themeToggleFocus.addEventListener('click', toggleTheme);
+    elements.addBtn.addEventListener('click', addTodo);
+    elements.todoInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addTodo();
+        }
+    });
+    elements.backBtn.addEventListener('click', backToList);
+    elements.startBtn.addEventListener('click', startTimer);
+    elements.pauseBtn.addEventListener('click', pauseTimer);
+    elements.resetBtn.addEventListener('click', resetTimer);
+
+    // Render todos
+    renderTodos();
+}
+
+// Theme management
+function toggleTheme() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', state.theme);
+    localStorage.setItem('theme', state.theme);
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const icon = state.theme === 'light' ? '🌙' : '☀️';
+    elements.themeToggle.textContent = icon;
+    elements.themeToggleFocus.textContent = icon;
+}
+
+// Todo management
+function addTodo() {
+    const text = elements.todoInput.value.trim();
+    if (!text) return;
+
+    const todo = {
+        id: Date.now() + Math.random(), // Add entropy to prevent collisions
+        name: text,
+        createdAt: new Date().toISOString(),
+        totalTime: 0 // in seconds
+    };
+
+    state.todos.unshift(todo);
+    saveTodos();
+    renderTodos();
+    
+    elements.todoInput.value = '';
+    elements.todoInput.focus();
+}
+
+function deleteTodo(id) {
+    if (confirm('确定要删除这个待办吗？')) {
+        state.todos = state.todos.filter(todo => todo.id !== id);
+        saveTodos();
+        renderTodos();
+    }
+}
+
+function startFocus(id) {
+    const todo = state.todos.find(t => t.id === id);
+    if (!todo) return;
+
+    state.currentTodoId = id;
+    
+    // Update ticket info
+    elements.ticketNumber.textContent = formatTicketNumber(id);
+    elements.ticketTaskName.textContent = todo.name;
+    elements.ticketDate.textContent = formatDate(new Date());
+    
+    // Load saved time
+    state.timerSeconds = todo.totalTime || 0;
+    updateTimerDisplay();
+    
+    // Switch to focus view
+    elements.listView.classList.add('hidden');
+    elements.focusView.classList.remove('hidden');
+}
+
+function backToList() {
+    // Stop timer if running
+    if (state.timerRunning) {
+        pauseTimer();
+    }
+    
+    // Switch back to list view
+    elements.focusView.classList.add('hidden');
+    elements.listView.classList.remove('hidden');
+    
+    state.currentTodoId = null;
+}
+
+function saveTodos() {
+    localStorage.setItem('todos', JSON.stringify(state.todos));
+}
+
+function renderTodos() {
+    if (state.todos.length === 0) {
+        elements.emptyState.classList.add('visible');
+        elements.todoList.innerHTML = '';
+        return;
+    }
+
+    elements.emptyState.classList.remove('visible');
+    
+    elements.todoList.innerHTML = state.todos.map(todo => `
+        <div class="todo-item">
+            <div class="todo-content">
+                <div class="todo-name">${escapeHtml(todo.name)}</div>
+                <div class="todo-time">已专注 ${formatTime(todo.totalTime || 0)}</div>
+            </div>
+            <div class="todo-actions">
+                <button class="action-btn" onclick="startFocus(${todo.id})">取号</button>
+                <button class="action-btn delete-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Timer management
+function startTimer() {
+    if (state.timerRunning) return;
+    
+    state.timerRunning = true;
+    elements.startBtn.classList.add('hidden');
+    elements.pauseBtn.classList.remove('hidden');
+    
+    state.timerInterval = setInterval(() => {
+        state.timerSeconds++;
+        updateTimerDisplay();
+        // Throttle localStorage writes to every 10 seconds
+        const now = Date.now();
+        if (now - state.lastSaveTime >= 10000) {
+            saveCurrentTodoTime();
+            state.lastSaveTime = now;
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!state.timerRunning) return;
+    
+    state.timerRunning = false;
+    elements.startBtn.classList.remove('hidden');
+    elements.pauseBtn.classList.add('hidden');
+    
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+    
+    saveCurrentTodoTime();
+}
+
+function resetTimer() {
+    const confirmReset = confirm('确定要重置计时器吗？这不会删除已保存的时间。');
+    if (!confirmReset) return;
+    
+    // Stop timer if running
+    if (state.timerRunning) {
+        pauseTimer();
+    }
+    
+    // Reset display
+    state.timerSeconds = 0;
+    updateTimerDisplay();
+}
+
+function saveCurrentTodoTime() {
+    if (state.currentTodoId === null) return;
+    
+    const todo = state.todos.find(t => t.id === state.currentTodoId);
+    if (todo) {
+        todo.totalTime = state.timerSeconds;
+        saveTodos();
+    }
+}
+
+function updateTimerDisplay() {
+    const hours = Math.floor(state.timerSeconds / 3600);
+    const minutes = Math.floor((state.timerSeconds % 3600) / 60);
+    const seconds = state.timerSeconds % 60;
+    
+    elements.timerDisplay.textContent = 
+        `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+}
+
+// Utility functions
+function formatTicketNumber(id) {
+    // Generate a ticket number like A001, B023, etc.
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const idInt = Math.floor(id); // Convert to integer
+    const num = idInt % 1000;
+    const letter = letters[Math.floor((idInt / 1000) % 26)];
+    return `${letter}${String(num).padStart(3, '0')}`;
+}
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = padZero(date.getMonth() + 1);
+    const day = padZero(date.getDate());
+    const hours = padZero(date.getHours());
+    const minutes = padZero(date.getMinutes());
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
+}
+
+function formatTime(seconds) {
+    if (seconds === 0) return '0分钟';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (hours > 0) {
+        return `${hours}小时${minutes}分钟`;
+    }
+    return `${minutes}分钟`;
+}
+
+function padZero(num) {
+    return String(num).padStart(2, '0');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Make functions globally accessible for onclick handlers
+window.startFocus = startFocus;
+window.deleteTodo = deleteTodo;
+
+// Clean up timer on page unload
+window.addEventListener('beforeunload', () => {
+    if (state.timerRunning) {
+        saveCurrentTodoTime();
+    }
+});
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
