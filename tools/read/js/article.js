@@ -3,6 +3,10 @@ import database from './db.js';
 import UI from './ui.js';
 
 class ArticleManager {
+    // Constants for content extraction
+    static MAX_EXCERPT_LENGTH = 300;
+    static MAX_CONTENT_LENGTH = 50000;
+    
     async addArticle(url, manualData = null) {
         try {
             // Check if article already exists
@@ -62,7 +66,7 @@ class ArticleManager {
                 const fetchUrl = proxy ? `${proxy}${encodeURIComponent(url)}` : url;
                 const response = await fetch(fetchUrl, {
                     headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                     }
                 });
                 
@@ -90,8 +94,10 @@ class ArticleManager {
                 
                 const cover = doc.querySelector('meta[property="og:image"]')?.content ||
                              doc.querySelector('meta[name="twitter:image"]')?.content ||
+                             doc.querySelector('.article-content img')?.src ||
+                             doc.querySelector('.post-content img')?.src ||
                              doc.querySelector('article img')?.src ||
-                             doc.querySelector('img')?.src ||
+                             doc.querySelector('[role="main"] img')?.src ||
                              '';
                 
                 // Simple content extraction (in production, use Readability.js)
@@ -102,11 +108,11 @@ class ArticleManager {
                 return {
                     url,
                     title: title.trim(),
-                    excerpt: excerpt.substring(0, 300),
+                    excerpt: excerpt.substring(0, ArticleManager.MAX_EXCERPT_LENGTH),
                     cover: cover ? this.resolveUrl(cover, url) : '',
                     domain: UI.extractDomain(url),
                     estReadTime: UI.estimateReadTime(content),
-                    content: content.substring(0, 50000) // Store first 50k chars
+                    content: content.substring(0, ArticleManager.MAX_CONTENT_LENGTH)
                 };
             } catch (error) {
                 lastError = error;
