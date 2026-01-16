@@ -5,7 +5,9 @@ const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
                         '3. 保存到吧唧墙后随时查看\n\n' +
                         '提示: 完整的下载功能需要html2canvas库支持';
 
-// Supported image MIME types for explicit validation
+// Supported image MIME types
+// Note: The validation uses startsWith('image/') to accept any image format,
+// making it future-proof for new formats. This list is mainly for documentation.
 const SUPPORTED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -226,7 +228,8 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check if file type is a supported image format
+    // Check if file type is an image format
+    // Using startsWith('image/') to accept any image MIME type for future compatibility
     const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
     
     if (isImageFile) {
@@ -288,7 +291,8 @@ async function handleDrop(e) {
     
     const file = files[0];
     
-    // Check if file type is a supported image format
+    // Check if file type is an image format
+    // Using startsWith('image/') to accept any image MIME type for future compatibility
     const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
     
     if (isImageFile) {

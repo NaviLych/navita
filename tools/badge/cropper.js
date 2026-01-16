@@ -1,5 +1,8 @@
 // Simple image cropper
 class ImageCropper {
+    // Default quality for lossy image formats (0.0 to 1.0)
+    static DEFAULT_IMAGE_QUALITY = 0.95;
+    
     constructor() {
         this.modal = null;
         this.canvas = null;
@@ -16,7 +19,7 @@ class ImageCropper {
         this.onCropComplete = null;
         this.scale = 1;
         this.imageFormat = 'image/png'; // Default format
-        this.imageQuality = 0.95; // Default quality for lossy formats
+        this.imageQuality = ImageCropper.DEFAULT_IMAGE_QUALITY;
     }
 
     createModal() {
