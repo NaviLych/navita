@@ -26,7 +26,6 @@ class BadgeDB {
                         autoIncrement: true 
                     });
                     badgeStore.createIndex('timestamp', 'timestamp', { unique: false });
-                    badgeStore.createIndex('title', 'title', { unique: false });
                 }
 
                 // Create settings store

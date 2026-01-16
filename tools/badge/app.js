@@ -473,10 +473,10 @@ async function loadGallery() {
             return `
                 <div class="gallery-item" data-id="${badge.id}">
                     <div class="gallery-item-actions">
-                        <button class="gallery-item-btn load" onclick="loadBadge(${badge.id})" title="加载">
+                        <button class="gallery-item-btn load" data-badge-id="${badge.id}" title="加载">
                             ✏️
                         </button>
-                        <button class="gallery-item-btn delete" onclick="deleteBadge(${badge.id})" title="删除">
+                        <button class="gallery-item-btn delete" data-badge-id="${badge.id}" title="删除">
                             🗑️
                         </button>
                     </div>
@@ -490,6 +490,23 @@ async function loadGallery() {
                 </div>
             `;
         }).join('');
+        
+        // Add event listeners for gallery items
+        elements.galleryGrid.querySelectorAll('.gallery-item-btn.load').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const badgeId = parseInt(btn.dataset.badgeId);
+                loadBadge(badgeId);
+            });
+        });
+        
+        elements.galleryGrid.querySelectorAll('.gallery-item-btn.delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const badgeId = parseInt(btn.dataset.badgeId);
+                deleteBadge(badgeId);
+            });
+        });
     } catch (error) {
         console.error('Failed to load gallery:', error);
     }
@@ -546,9 +563,35 @@ function switchTab(tab) {
 }
 
 // Download badge
-function downloadBadge() {
-    // Simple download implementation
-    alert('下载功能提示:\n\n1. 右键点击吧唧 → 另存为图片\n2. 使用截图工具保存\n3. 或者先保存到吧唧墙');
+async function downloadBadge() {
+    try {
+        // Use modern browser API to convert badge to image
+        const badge = elements.badge;
+        
+        // For a simple implementation, we'll use the canvas approach
+        // In production, consider using html2canvas library for better results
+        
+        // Create a temporary canvas
+        const canvas = document.createElement('canvas');
+        const rect = badge.getBoundingClientRect();
+        const scale = 2; // Higher resolution
+        
+        canvas.width = rect.width * scale;
+        canvas.height = rect.height * scale;
+        
+        // Note: For a complete implementation, you would need html2canvas library
+        // For now, show a helpful message with alternative methods
+        const message = '下载功能提示:\n\n' +
+                       '1. 右键点击吧唧 → 另存为图片\n' +
+                       '2. 使用截图工具保存\n' +
+                       '3. 保存到吧唧墙后随时查看\n\n' +
+                       '提示: 完整的下载功能需要html2canvas库支持';
+        
+        alert(message);
+    } catch (error) {
+        console.error('Download error:', error);
+        alert('操作失败，请使用右键菜单或截图工具保存');
+    }
 }
 
 // Reset to defaults

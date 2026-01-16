@@ -15,7 +15,6 @@ class ImageCropper {
         this.dragStart = { x: 0, y: 0 };
         this.onCropComplete = null;
         this.scale = 1;
-        this.imageData = null;
     }
 
     createModal() {
@@ -29,7 +28,6 @@ class ImageCropper {
                 </div>
                 <div class="cropper-canvas-wrapper">
                     <canvas class="cropper-canvas"></canvas>
-                    <div class="cropper-overlay"></div>
                 </div>
                 <div class="cropper-controls">
                     <button class="btn btn-secondary cropper-cancel">取消</button>
@@ -63,7 +61,6 @@ class ImageCropper {
             this.createModal();
         }
 
-        this.imageData = imageData;
         this.image = new Image();
         
         return new Promise((resolve) => {
