@@ -15,6 +15,8 @@ class ImageCropper {
         this.dragStart = { x: 0, y: 0 };
         this.onCropComplete = null;
         this.scale = 1;
+        this.imageFormat = 'image/png'; // Default format
+        this.imageQuality = 0.95; // Default quality for lossy formats
     }
 
     createModal() {
@@ -61,6 +63,9 @@ class ImageCropper {
             this.createModal();
         }
 
+        // Detect image format from data URL
+        this.detectImageFormat(imageData);
+
         this.image = new Image();
         
         return new Promise((resolve) => {
@@ -69,8 +74,36 @@ class ImageCropper {
                 this.modal.classList.add('active');
                 this.onCropComplete = resolve;
             };
+            this.image.onerror = () => {
+                console.error('Failed to load image');
+                alert('图片加载失败，请尝试其他格式的图片');
+                resolve(null);
+            };
             this.image.src = imageData;
         });
+    }
+    
+    detectImageFormat(imageData) {
+        // Extract MIME type from data URL
+        if (imageData.startsWith('data:')) {
+            const mimeMatch = imageData.match(/^data:([^;]+)/);
+            if (mimeMatch) {
+                const mimeType = mimeMatch[1];
+                // Map supported formats, default to PNG for unsupported
+                const supportedFormats = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp'
+                ];
+                
+                if (supportedFormats.includes(mimeType)) {
+                    this.imageFormat = mimeType;
+                } else {
+                    // For formats not supported in canvas.toDataURL (SVG, BMP, etc), convert to PNG
+                    this.imageFormat = 'image/png';
+                }
+            }
+        }
     }
 
     setupCanvas() {
@@ -260,8 +293,14 @@ class ImageCropper {
             cropHeight
         );
 
-        // Convert to data URL
-        const croppedImageData = croppedCanvas.toDataURL('image/png');
+        // Convert to data URL using detected format
+        // For JPEG, use quality parameter
+        let croppedImageData;
+        if (this.imageFormat === 'image/jpeg') {
+            croppedImageData = croppedCanvas.toDataURL(this.imageFormat, this.imageQuality);
+        } else {
+            croppedImageData = croppedCanvas.toDataURL(this.imageFormat);
+        }
 
         this.close();
 

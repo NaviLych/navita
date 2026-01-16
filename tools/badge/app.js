@@ -212,7 +212,25 @@ function updateDate() {
 // Image handling with cropping
 async function handleImageUpload(e) {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (!file) return;
+    
+    // List of supported image MIME types
+    const supportedImageTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/bmp',
+        'image/svg+xml',
+        'image/avif',
+        'image/tiff'
+    ];
+    
+    // Check if file type is supported
+    const isImageFile = file.type.startsWith('image/') || supportedImageTypes.includes(file.type);
+    
+    if (isImageFile) {
         try {
             const reader = new FileReader();
             reader.onload = async (event) => {
@@ -235,6 +253,8 @@ async function handleImageUpload(e) {
             console.error('Image upload error:', error);
             alert('图片上传失败，请重试');
         }
+    } else {
+        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
     }
 }
 
@@ -265,7 +285,27 @@ async function handleDrop(e) {
     elements.imageUploadArea.classList.remove('dragover');
     
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type.startsWith('image/')) {
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    // List of supported image MIME types
+    const supportedImageTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/bmp',
+        'image/svg+xml',
+        'image/avif',
+        'image/tiff'
+    ];
+    
+    // Check if file type is supported
+    const isImageFile = file.type.startsWith('image/') || supportedImageTypes.includes(file.type);
+    
+    if (isImageFile) {
         try {
             const reader = new FileReader();
             reader.onload = async (event) => {
@@ -283,11 +323,13 @@ async function handleDrop(e) {
                     elements.imagePlaceholder.classList.add('hidden');
                 }
             };
-            reader.readAsDataURL(files[0]);
+            reader.readAsDataURL(file);
         } catch (error) {
             console.error('Drop error:', error);
             alert('图片上传失败，请重试');
         }
+    } else {
+        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
     }
 }
 
