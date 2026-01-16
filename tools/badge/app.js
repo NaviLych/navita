@@ -5,6 +5,8 @@ const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
                         '3. 保存到吧唧墙后随时查看\n\n' +
                         '提示: 完整的下载功能需要html2canvas库支持';
 
+const UNSUPPORTED_FILE_MESSAGE = '不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）';
+
 // State management
 const state = {
     theme: 'dark',
@@ -217,7 +219,7 @@ async function handleImageUpload(e) {
     // Check if file type is an image format
     // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
     if (!file.type.startsWith('image/')) {
-        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
+        alert(UNSUPPORTED_FILE_MESSAGE);
         return;
     }
     
@@ -279,7 +281,7 @@ async function handleDrop(e) {
     // Check if file type is an image format
     // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
     if (!file.type.startsWith('image/')) {
-        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
+        alert(UNSUPPORTED_FILE_MESSAGE);
         return;
     }
     

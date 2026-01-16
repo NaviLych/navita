@@ -79,7 +79,7 @@ class ImageCropper {
             };
             this.image.onerror = () => {
                 console.error('Failed to load image');
-                alert('图片加载失败，请尝试其他格式的图片');
+                alert('图片加载失败，请检查文件是否损坏');
                 resolve(null);
             };
             this.image.src = imageData;
@@ -87,15 +87,18 @@ class ImageCropper {
     }
     
     detectImageFormat(imageData) {
+        // Default to PNG format
+        this.imageFormat = 'image/png';
+        
         // Extract MIME type from data URL
-        if (imageData.startsWith('data:')) {
+        if (imageData && imageData.startsWith('data:')) {
             const mimeMatch = imageData.match(/^data:([^;]+)/);
-            if (mimeMatch) {
+            if (mimeMatch && mimeMatch[1]) {
                 const mimeType = mimeMatch[1];
                 // Only preserve formats that canvas.toDataURL() natively supports
                 // Other formats (GIF, BMP, SVG, AVIF, TIFF) will be converted to PNG
-                // This list is separate from SUPPORTED_IMAGE_TYPES in app.js because
-                // it reflects canvas export capabilities, not input acceptance
+                // This list is separate from app.js validation because it reflects
+                // canvas export capabilities, not input acceptance
                 const canvasExportFormats = [
                     'image/jpeg',
                     'image/png',
@@ -104,10 +107,8 @@ class ImageCropper {
                 
                 if (canvasExportFormats.includes(mimeType)) {
                     this.imageFormat = mimeType;
-                } else {
-                    // For formats not supported in canvas.toDataURL, convert to PNG
-                    this.imageFormat = 'image/png';
                 }
+                // Else keep default PNG format
             }
         }
     }
