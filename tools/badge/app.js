@@ -222,27 +222,27 @@ async function handleImageUpload(e) {
     }
     
     try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const originalImageData = event.target.result;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const originalImageData = event.target.result;
+            
+            // Open cropper
+            const croppedData = await imageCropper.open(originalImageData);
+            
+            if (croppedData) {
+                // Only store the cropped image
+                state.imageData = croppedData;
                 
-                // Open cropper
-                const croppedData = await imageCropper.open(originalImageData);
-                
-                if (croppedData) {
-                    // Only store the cropped image
-                    state.imageData = croppedData;
-                    
-                    elements.badgeImage.src = croppedData;
-                    elements.badgeImage.classList.remove('hidden');
-                    elements.imagePlaceholder.classList.add('hidden');
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            console.error('Image upload error:', error);
-            alert('图片上传失败，请重试');
-        }
+                elements.badgeImage.src = croppedData;
+                elements.badgeImage.classList.remove('hidden');
+                elements.imagePlaceholder.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Image upload error:', error);
+        alert('图片上传失败，请重试');
+    }
 }
 
 function clearImage() {
