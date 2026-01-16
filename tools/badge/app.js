@@ -278,14 +278,14 @@ async function downloadBadge() {
         const videoBlob = await captureAnimatedVideo(badge);
         
         // Step 3: Download both files
-        await downloadFiles(staticImage, videoBlob);
+        const filenames = await downloadFiles(staticImage, videoBlob);
         
         // Reset button state
         elements.downloadBtn.disabled = false;
         elements.downloadBtn.innerHTML = '<span class="btn-icon">💾</span><span class="btn-text">下载吧唧</span>';
         
         // Show success message
-        alert('✅ Live Photo 已生成！\n\n已下载两个文件:\n1. badge-photo.jpg (静态图片)\n2. badge-video.mov (动画视频)\n\n将这两个文件传输到您的 iPhone，可以作为 Live Photo 使用。');
+        alert(`✅ Live Photo 已生成！\n\n已下载两个文件:\n1. ${filenames.image}\n2. ${filenames.video}\n\n将这两个文件传输到您的 iPhone，可以作为 Live Photo 使用。`);
         
     } catch (error) {
         console.error('Download error:', error);
@@ -426,11 +426,6 @@ function applyComputedStyles(clone, original) {
     }
 }
 
-// Helper function to create SVG snapshot
-function createSVGSnapshot(element, width, height, scale = 1) {
-    return createInlineSVGSnapshot(element, width, height);
-}
-
 // Capture animated video using canvas recording
 async function captureAnimatedVideo(badge) {
     return new Promise(async (resolve, reject) => {
@@ -514,16 +509,17 @@ async function captureAnimatedVideo(badge) {
                 
                 try {
                     // Capture frame using SVG method
-                    const svgData = createSVGSnapshot(badge, rect.width, rect.height, 1);
+                    const svgData = createInlineSVGSnapshot(badge, rect.width, rect.height);
                     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                     const svgUrl = URL.createObjectURL(svgBlob);
                     
                     const img = new Image();
                     img.onload = () => {
+                        ctx.save(); // Save current state
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         ctx.scale(scale, scale);
                         ctx.drawImage(img, 0, 0);
-                        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+                        ctx.restore(); // Restore state
                         URL.revokeObjectURL(svgUrl);
                         
                         frameCount++;
@@ -572,29 +568,43 @@ async function downloadFiles(imageBlob, videoBlob) {
     // Generate timestamp for unique filenames
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     
+    // Determine video extension based on blob type
+    const videoType = videoBlob.type;
+    let videoExt = 'webm';
+    if (videoType.includes('mp4')) {
+        videoExt = 'mp4';
+    } else if (videoType.includes('webm')) {
+        videoExt = 'webm';
+    }
+    
+    const imageFilename = `badge-photo-${timestamp}.jpg`;
+    const videoFilename = `badge-video-${timestamp}.${videoExt}`;
+    
     // Download static image (JPEG)
     const imageUrl = URL.createObjectURL(imageBlob);
     const imageLink = document.createElement('a');
     imageLink.href = imageUrl;
-    imageLink.download = `badge-photo-${timestamp}.jpg`;
+    imageLink.download = imageFilename;
     document.body.appendChild(imageLink);
     imageLink.click();
     document.body.removeChild(imageLink);
-    URL.revokeObjectURL(imageUrl);
+    setTimeout(() => URL.revokeObjectURL(imageUrl), 100);
     
     // Wait a bit before downloading video to avoid browser blocking
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Download video (MOV/WebM)
+    // Download video
     const videoUrl = URL.createObjectURL(videoBlob);
     const videoLink = document.createElement('a');
     videoLink.href = videoUrl;
-    // Use .mov extension for better iOS compatibility, even if it's webm
-    videoLink.download = `badge-video-${timestamp}.mov`;
+    videoLink.download = videoFilename;
     document.body.appendChild(videoLink);
     videoLink.click();
     document.body.removeChild(videoLink);
-    URL.revokeObjectURL(videoUrl);
+    setTimeout(() => URL.revokeObjectURL(videoUrl), 100);
+    
+    // Return filenames for display
+    return { image: imageFilename, video: videoFilename };
 }
 
 // Reset to defaults
