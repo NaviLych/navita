@@ -291,144 +291,47 @@ async function downloadBadge() {
         console.error('Download error:', error);
         elements.downloadBtn.disabled = false;
         elements.downloadBtn.innerHTML = '<span class="btn-icon">💾</span><span class="btn-text">下载吧唧</span>';
-        alert('下载失败: ' + error.message + '\n\n请尝试使用现代浏览器（Chrome、Firefox、Safari）。');
+        alert('下载失败: ' + error.message + '\n\n请确保浏览器支持此功能。');
     }
 }
 
-// Capture static image using SVG foreignObject
+// Capture static image using html2canvas
 async function captureStaticImage(badge) {
     return new Promise((resolve, reject) => {
-        try {
-            // Temporarily disable animations for static capture
-            const wasAnimating = state.effects.animate;
+        // Temporarily disable animations for static capture
+        const wasAnimating = state.effects.animate;
+        if (wasAnimating) {
+            badge.classList.remove('animate');
+        }
+        
+        html2canvas(badge, {
+            backgroundColor: null,
+            scale: 3, // High resolution
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+        }).then(canvas => {
+            // Restore animation state
             if (wasAnimating) {
-                badge.classList.remove('animate');
+                badge.classList.add('animate');
             }
             
-            const rect = badge.getBoundingClientRect();
-            const scale = 3; // High resolution
-            
-            // Create canvas and draw using inline styles
-            const canvas = document.createElement('canvas');
-            canvas.width = rect.width * scale;
-            canvas.height = rect.height * scale;
-            const ctx = canvas.getContext('2d', { willReadFrequently: false });
-            ctx.scale(scale, scale);
-            
-            // Create SVG with inline styles to avoid CORS
-            const svgData = createInlineSVGSnapshot(badge, rect.width, rect.height);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            
-            // Create an object URL
-            const url = URL.createObjectURL(svgBlob);
-            
-            const img = new Image();
-            img.crossOrigin = 'anonymous'; // Try to avoid CORS
-            
-            img.onload = () => {
-                try {
-                    ctx.drawImage(img, 0, 0);
-                    URL.revokeObjectURL(url);
-                    
-                    // Restore animation state
-                    if (wasAnimating) {
-                        badge.classList.add('animate');
-                    }
-                    
-                    // Convert to JPEG blob
-                    canvas.toBlob(blob => {
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            reject(new Error('无法生成图片'));
-                        }
-                    }, 'image/jpeg', 0.95);
-                } catch (error) {
-                    URL.revokeObjectURL(url);
-                    if (wasAnimating) {
-                        badge.classList.add('animate');
-                    }
-                    reject(error);
+            // Convert to JPEG blob (Apple Live Photos use JPEG)
+            canvas.toBlob(blob => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    reject(new Error('无法生成图片'));
                 }
-            };
-            
-            img.onerror = () => {
-                URL.revokeObjectURL(url);
-                if (wasAnimating) {
-                    badge.classList.add('animate');
-                }
-                reject(new Error('图片加载失败'));
-            };
-            
-            img.src = url;
-        } catch (error) {
+            }, 'image/jpeg', 0.95);
+        }).catch(error => {
+            // Restore animation state
+            if (wasAnimating) {
+                badge.classList.add('animate');
+            }
             reject(error);
-        }
-    });
-}
-
-// Helper function to create inline SVG snapshot with embedded styles
-function createInlineSVGSnapshot(element, width, height) {
-    const clone = element.cloneNode(true);
-    
-    // Extract computed styles and apply inline
-    applyComputedStyles(clone, element);
-    
-    // Get all CSS rules
-    let cssText = '';
-    try {
-        const styleSheets = Array.from(document.styleSheets);
-        styleSheets.forEach(sheet => {
-            try {
-                if (sheet.cssRules) {
-                    Array.from(sheet.cssRules).forEach(rule => {
-                        cssText += rule.cssText + '\n';
-                    });
-                }
-            } catch (e) {
-                // Skip inaccessible stylesheets
-            }
         });
-    } catch (e) {
-        console.warn('Could not access stylesheets');
-    }
-    
-    // Create SVG
-    const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-            <foreignObject width="${width}" height="${height}" x="0" y="0">
-                <div xmlns="http://www.w3.org/1999/xhtml">
-                    <style>${cssText}</style>
-                    ${clone.outerHTML}
-                </div>
-            </foreignObject>
-        </svg>
-    `;
-    
-    return svg;
-}
-
-// Helper to apply computed styles inline to avoid external dependencies
-function applyComputedStyles(clone, original) {
-    const computedStyle = window.getComputedStyle(original);
-    const styleText = Array.from(computedStyle).map(key => 
-        `${key}:${computedStyle.getPropertyValue(key)}`
-    ).join(';');
-    clone.setAttribute('style', styleText);
-    
-    // Recursively apply to children
-    const cloneChildren = clone.children;
-    const originalChildren = original.children;
-    for (let i = 0; i < cloneChildren.length; i++) {
-        if (originalChildren[i]) {
-            applyComputedStyles(cloneChildren[i], originalChildren[i]);
-        }
-    }
-}
-
-// Helper function to create SVG snapshot
-function createSVGSnapshot(element, width, height, scale = 1) {
-    return createInlineSVGSnapshot(element, width, height);
+    });
 }
 
 // Capture animated video using canvas recording
@@ -441,17 +344,14 @@ async function captureAnimatedVideo(badge) {
                 badge.classList.add('animate');
             }
             
+            // Create an offscreen canvas to render frames
             const rect = badge.getBoundingClientRect();
             const scale = 2; // Balance quality and file size
             const canvas = document.createElement('canvas');
             canvas.width = rect.width * scale;
             canvas.height = rect.height * scale;
             
-            // Check for MediaRecorder support
-            if (!canvas.captureStream) {
-                throw new Error('您的浏览器不支持视频录制功能');
-            }
-            
+            // Capture stream from canvas
             const stream = canvas.captureStream(30); // 30 fps
             
             // Determine best video format
@@ -463,12 +363,12 @@ async function captureAnimatedVideo(badge) {
             } else if (MediaRecorder.isTypeSupported('video/webm')) {
                 mimeType = 'video/webm';
             } else {
-                throw new Error('浏览器不支持所需的视频格式');
+                throw new Error('浏览器不支持视频录制');
             }
             
             const mediaRecorder = new MediaRecorder(stream, {
                 mimeType: mimeType,
-                videoBitsPerSecond: 2500000
+                videoBitsPerSecond: 2500000 // 2.5 Mbps
             });
             
             const chunks = [];
@@ -479,14 +379,17 @@ async function captureAnimatedVideo(badge) {
             };
             
             mediaRecorder.onstop = () => {
+                // Restore animation state
                 if (!wasAnimating) {
                     badge.classList.remove('animate');
                 }
+                
                 const blob = new Blob(chunks, { type: mimeType });
                 resolve(blob);
             };
             
-            mediaRecorder.onerror = () => {
+            mediaRecorder.onerror = (e) => {
+                // Restore animation state
                 if (!wasAnimating) {
                     badge.classList.remove('animate');
                 }
@@ -500,61 +403,47 @@ async function captureAnimatedVideo(badge) {
             const duration = 3000;
             const fps = 30;
             const frameInterval = 1000 / fps;
-            const totalFrames = Math.floor(duration / frameInterval);
             let frameCount = 0;
+            const totalFrames = duration / frameInterval;
             
-            // Render frames
-            const ctx = canvas.getContext('2d');
-            
-            const renderFrame = () => {
+            // Render frames to canvas
+            const renderFrame = async () => {
                 if (frameCount >= totalFrames) {
-                    setTimeout(() => mediaRecorder.stop(), 100);
+                    // Stop recording after duration
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 100);
                     return;
                 }
                 
                 try {
-                    // Capture frame using SVG method
-                    const svgData = createSVGSnapshot(badge, rect.width, rect.height, 1);
-                    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-                    const svgUrl = URL.createObjectURL(svgBlob);
+                    // Capture current frame using html2canvas
+                    const frameCanvas = await html2canvas(badge, {
+                        backgroundColor: null,
+                        scale: scale,
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: rect.width,
+                        height: rect.height
+                    });
                     
-                    const img = new Image();
-                    img.onload = () => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.scale(scale, scale);
-                        ctx.drawImage(img, 0, 0);
-                        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-                        URL.revokeObjectURL(svgUrl);
-                        
-                        frameCount++;
-                        if (frameCount < totalFrames) {
-                            setTimeout(renderFrame, frameInterval);
-                        } else {
-                            setTimeout(() => mediaRecorder.stop(), 100);
-                        }
-                    };
+                    // Draw to our canvas
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(frameCanvas, 0, 0);
                     
-                    img.onerror = () => {
-                        URL.revokeObjectURL(svgUrl);
-                        // Continue even if frame fails
-                        frameCount++;
-                        if (frameCount < totalFrames) {
-                            setTimeout(renderFrame, frameInterval);
-                        } else {
-                            setTimeout(() => mediaRecorder.stop(), 100);
-                        }
-                    };
-                    
-                    img.src = svgUrl;
-                } catch (error) {
-                    console.error('Frame capture error:', error);
-                    // Continue recording even if frame fails
                     frameCount++;
+                    
+                    // Schedule next frame
                     if (frameCount < totalFrames) {
                         setTimeout(renderFrame, frameInterval);
                     } else {
                         setTimeout(() => mediaRecorder.stop(), 100);
                     }
+                } catch (error) {
+                    console.error('Frame render error:', error);
+                    mediaRecorder.stop();
                 }
             };
             
