@@ -15,7 +15,7 @@
 点击"下载吧唧"按钮会生成两个文件：
 
 1. **badge-photo-[timestamp].jpg** - 静态图片（高分辨率 JPEG）
-2. **badge-video-[timestamp].mov** - 动画视频（3秒循环）
+2. **badge-video-[timestamp].webm** 或 **.mp4** - 动画视频（3秒循环，格式取决于浏览器支持）
 
 这两个文件可以组合使用，模拟苹果 Live Photo 效果。
 

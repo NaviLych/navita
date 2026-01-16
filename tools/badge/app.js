@@ -13,6 +13,16 @@ const state = {
     }
 };
 
+// Download configuration constants
+const DOWNLOAD_CONFIG = {
+    IMAGE_SCALE: 3, // High resolution multiplier for static images
+    VIDEO_SCALE: 2, // Balance between quality and file size for video
+    VIDEO_DURATION: 3000, // Duration in milliseconds (3 seconds for Live Photo compatibility)
+    VIDEO_FPS: 30, // Frames per second
+    VIDEO_BITRATE: 2500000, // 2.5 Mbps
+    IMAGE_QUALITY: 0.95 // JPEG quality (0-1)
+};
+
 // Load saved effects
 try {
     const savedEffects = JSON.parse(localStorage.getItem('badge-effects'));
@@ -306,13 +316,16 @@ async function captureStaticImage(badge) {
             }
             
             const rect = badge.getBoundingClientRect();
-            const scale = 3; // High resolution
+            const scale = DOWNLOAD_CONFIG.IMAGE_SCALE;
             
-            // Create canvas and draw using inline styles
+            // Create canvas
             const canvas = document.createElement('canvas');
             canvas.width = rect.width * scale;
             canvas.height = rect.height * scale;
             const ctx = canvas.getContext('2d', { willReadFrequently: false });
+            
+            // Apply scale transform
+            ctx.save();
             ctx.scale(scale, scale);
             
             // Create SVG with inline styles to avoid CORS
@@ -328,6 +341,7 @@ async function captureStaticImage(badge) {
             img.onload = () => {
                 try {
                     ctx.drawImage(img, 0, 0);
+                    ctx.restore();
                     URL.revokeObjectURL(url);
                     
                     // Restore animation state
@@ -342,8 +356,9 @@ async function captureStaticImage(badge) {
                         } else {
                             reject(new Error('无法生成图片'));
                         }
-                    }, 'image/jpeg', 0.95);
+                    }, 'image/jpeg', DOWNLOAD_CONFIG.IMAGE_QUALITY);
                 } catch (error) {
+                    ctx.restore();
                     URL.revokeObjectURL(url);
                     if (wasAnimating) {
                         badge.classList.add('animate');
@@ -353,6 +368,7 @@ async function captureStaticImage(badge) {
             };
             
             img.onerror = () => {
+                ctx.restore();
                 URL.revokeObjectURL(url);
                 if (wasAnimating) {
                     badge.classList.add('animate');
@@ -427,8 +443,8 @@ function applyComputedStyles(clone, original) {
 }
 
 // Capture animated video using canvas recording
-async function captureAnimatedVideo(badge) {
-    return new Promise(async (resolve, reject) => {
+function captureAnimatedVideo(badge) {
+    return new Promise((resolve, reject) => {
         try {
             // Ensure animations are enabled
             const wasAnimating = state.effects.animate;
@@ -437,7 +453,7 @@ async function captureAnimatedVideo(badge) {
             }
             
             const rect = badge.getBoundingClientRect();
-            const scale = 2; // Balance quality and file size
+            const scale = DOWNLOAD_CONFIG.VIDEO_SCALE;
             const canvas = document.createElement('canvas');
             canvas.width = rect.width * scale;
             canvas.height = rect.height * scale;
@@ -447,7 +463,7 @@ async function captureAnimatedVideo(badge) {
                 throw new Error('您的浏览器不支持视频录制功能');
             }
             
-            const stream = canvas.captureStream(30); // 30 fps
+            const stream = canvas.captureStream(DOWNLOAD_CONFIG.VIDEO_FPS);
             
             // Determine best video format
             let mimeType = 'video/webm;codecs=vp9';
@@ -463,7 +479,7 @@ async function captureAnimatedVideo(badge) {
             
             const mediaRecorder = new MediaRecorder(stream, {
                 mimeType: mimeType,
-                videoBitsPerSecond: 2500000
+                videoBitsPerSecond: DOWNLOAD_CONFIG.VIDEO_BITRATE
             });
             
             const chunks = [];
@@ -491,9 +507,9 @@ async function captureAnimatedVideo(badge) {
             // Start recording
             mediaRecorder.start();
             
-            // Record for 3 seconds (typical Live Photo duration)
-            const duration = 3000;
-            const fps = 30;
+            // Record for configured duration
+            const duration = DOWNLOAD_CONFIG.VIDEO_DURATION;
+            const fps = DOWNLOAD_CONFIG.VIDEO_FPS;
             const frameInterval = 1000 / fps;
             const totalFrames = Math.floor(duration / frameInterval);
             let frameCount = 0;
