@@ -49,6 +49,12 @@ const elements = {
     clearAllBadgesBtn: document.getElementById('clearAllBadgesBtn')
 };
 
+// Helper function to get image data with backward compatibility
+function getImageData(badge) {
+    // Prefer croppedImageData from old schema, fallback to new imageData field
+    return badge.croppedImageData || badge.imageData;
+}
+
 // Initialize app
 async function init() {
     try {
@@ -390,8 +396,7 @@ async function loadBadge(id) {
         if (badge) {
             state.title = badge.title;
             state.subtitle = badge.subtitle;
-            // Backward compatibility: prefer croppedImageData if it exists (old schema)
-            state.imageData = badge.croppedImageData || badge.imageData;
+            state.imageData = getImageData(badge);
             state.style = badge.style;
             state.shape = badge.shape;
             state.effects = badge.effects;
@@ -526,8 +531,7 @@ function renderBadgePreview(badge) {
     const shapeClass = badge.shape !== 'rounded' ? `shape-${badge.shape}` : '';
     const glowClass = badge.effects.glow ? 'glow' : '';
     
-    // Backward compatibility: prefer croppedImageData if it exists (old schema)
-    const imageData = badge.croppedImageData || badge.imageData;
+    const imageData = getImageData(badge);
     const imgHtml = imageData 
         ? `<img src="${imageData}" alt="" class="badge-image">`
         : `<div class="image-placeholder">
