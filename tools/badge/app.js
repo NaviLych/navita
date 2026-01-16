@@ -1,27 +1,20 @@
 // State management
 const state = {
-    theme: localStorage.getItem('badge-theme') || 'dark',
+    theme: 'dark',
     title: '我的电子吧唧',
     subtitle: '定制你的专属徽章',
-    imageData: localStorage.getItem('badge-image') || null,
-    style: localStorage.getItem('badge-style') || 'gradient',
-    shape: localStorage.getItem('badge-shape') || 'rounded',
+    imageData: null,
+    croppedImageData: null,
+    style: 'gradient',
+    shape: 'rounded',
     effects: {
         shine: true,
         animate: true,
         glow: false
-    }
+    },
+    currentTab: 'editor',
+    editingBadgeId: null
 };
-
-// Load saved effects
-try {
-    const savedEffects = JSON.parse(localStorage.getItem('badge-effects'));
-    if (savedEffects) {
-        state.effects = savedEffects;
-    }
-} catch (e) {
-    console.error('Failed to load effects:', e);
-}
 
 // DOM elements
 const elements = {
@@ -40,51 +33,78 @@ const elements = {
     clearImageBtn: document.getElementById('clearImageBtn'),
     themeToggle: document.getElementById('themeToggle'),
     downloadBtn: document.getElementById('downloadBtn'),
+    saveBadgeBtn: document.getElementById('saveBadgeBtn'),
     resetBtn: document.getElementById('resetBtn'),
     shineEffect: document.getElementById('shineEffect'),
     animateEffect: document.getElementById('animateEffect'),
-    glowEffect: document.getElementById('glowEffect')
+    glowEffect: document.getElementById('glowEffect'),
+    galleryGrid: document.getElementById('galleryGrid'),
+    galleryEmpty: document.getElementById('galleryEmpty'),
+    clearAllBadgesBtn: document.getElementById('clearAllBadgesBtn')
 };
 
 // Initialize app
-function init() {
-    // Set theme
-    document.documentElement.setAttribute('data-theme', state.theme);
-    updateThemeIcon();
+async function init() {
+    try {
+        // Initialize database
+        await badgeDB.init();
+        
+        // Load settings
+        await loadSettings();
+        
+        // Set theme
+        document.documentElement.setAttribute('data-theme', state.theme);
+        updateThemeIcon();
 
-    // Set date
-    updateDate();
+        // Set date
+        updateDate();
 
-    // Load saved data
-    if (state.imageData) {
-        elements.badgeImage.src = state.imageData;
-        elements.badgeImage.classList.remove('hidden');
-        elements.imagePlaceholder.classList.add('hidden');
+        // Apply saved settings
+        elements.titleInput.value = state.title;
+        elements.subtitleInput.value = state.subtitle;
+        elements.badgeTitle.textContent = state.title;
+        elements.badgeSubtitle.textContent = state.subtitle;
+
+        // Apply saved style and shape
+        applyStyle(state.style);
+        applyShape(state.shape);
+        
+        // Apply saved effects
+        elements.shineEffect.checked = state.effects.shine;
+        elements.animateEffect.checked = state.effects.animate;
+        elements.glowEffect.checked = state.effects.glow;
+        updateEffects();
+
+        // Event listeners
+        setupEventListeners();
+        
+        // Load gallery
+        await loadGallery();
+        
+        console.log('Badge generator initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize:', error);
+        alert('初始化失败，可能是浏览器不支持IndexedDB');
     }
+}
 
-    elements.titleInput.value = state.title;
-    elements.subtitleInput.value = state.subtitle;
-    elements.badgeTitle.textContent = state.title;
-    elements.badgeSubtitle.textContent = state.subtitle;
-
-    // Apply saved style and shape
-    applyStyle(state.style);
-    applyShape(state.shape);
-    
-    // Apply saved effects
-    elements.shineEffect.checked = state.effects.shine;
-    elements.animateEffect.checked = state.effects.animate;
-    elements.glowEffect.checked = state.effects.glow;
-    updateEffects();
-
-    // Event listeners
+function setupEventListeners() {
+    // Theme toggle
     elements.themeToggle.addEventListener('click', toggleTheme);
+    
+    // Image handling
     elements.imageInput.addEventListener('change', handleImageUpload);
+    elements.clearImageBtn.addEventListener('click', clearImage);
+    
+    // Text inputs
     elements.titleInput.addEventListener('input', handleTitleChange);
     elements.subtitleInput.addEventListener('input', handleSubtitleChange);
-    elements.clearImageBtn.addEventListener('click', clearImage);
+    
+    // Buttons
     elements.downloadBtn.addEventListener('click', downloadBadge);
+    elements.saveBadgeBtn.addEventListener('click', saveBadge);
     elements.resetBtn.addEventListener('click', resetToDefaults);
+    elements.clearAllBadgesBtn.addEventListener('click', clearAllBadges);
     
     // Effect checkboxes
     elements.shineEffect.addEventListener('change', handleEffectChange);
@@ -104,7 +124,7 @@ function init() {
             btn.classList.add('active');
             applyStyle(style);
             state.style = style;
-            localStorage.setItem('badge-style', style);
+            saveSettings();
         });
     });
 
@@ -116,16 +136,51 @@ function init() {
             btn.classList.add('active');
             applyShape(shape);
             state.shape = shape;
-            localStorage.setItem('badge-shape', shape);
+            saveSettings();
         });
     });
+    
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            switchTab(tab);
+        });
+    });
+}
+
+// Settings management
+async function loadSettings() {
+    try {
+        state.theme = await badgeDB.getSetting('theme') || 'dark';
+        state.style = await badgeDB.getSetting('style') || 'gradient';
+        state.shape = await badgeDB.getSetting('shape') || 'rounded';
+        state.effects = await badgeDB.getSetting('effects') || {
+            shine: true,
+            animate: true,
+            glow: false
+        };
+    } catch (error) {
+        console.error('Failed to load settings:', error);
+    }
+}
+
+async function saveSettings() {
+    try {
+        await badgeDB.saveSetting('theme', state.theme);
+        await badgeDB.saveSetting('style', state.style);
+        await badgeDB.saveSetting('shape', state.shape);
+        await badgeDB.saveSetting('effects', state.effects);
+    } catch (error) {
+        console.error('Failed to save settings:', error);
+    }
 }
 
 // Theme management
 function toggleTheme() {
     state.theme = state.theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', state.theme);
-    localStorage.setItem('badge-theme', state.theme);
+    saveSettings();
     updateThemeIcon();
 }
 
@@ -142,27 +197,38 @@ function updateDate() {
     elements.badgeDate.textContent = `${year}.${month}.${day}`;
 }
 
-// Image handling
-function handleImageUpload(e) {
+// Image handling with cropping
+async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const imageData = event.target.result;
-            state.imageData = imageData;
-            localStorage.setItem('badge-image', imageData);
-            
-            elements.badgeImage.src = imageData;
-            elements.badgeImage.classList.remove('hidden');
-            elements.imagePlaceholder.classList.add('hidden');
-        };
-        reader.readAsDataURL(file);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const imageData = event.target.result;
+                
+                // Open cropper
+                const croppedData = await imageCropper.open(imageData);
+                
+                if (croppedData) {
+                    state.imageData = imageData;
+                    state.croppedImageData = croppedData;
+                    
+                    elements.badgeImage.src = croppedData;
+                    elements.badgeImage.classList.remove('hidden');
+                    elements.imagePlaceholder.classList.add('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Image upload error:', error);
+            alert('图片上传失败，请重试');
+        }
     }
 }
 
 function clearImage() {
     state.imageData = null;
-    localStorage.removeItem('badge-image');
+    state.croppedImageData = null;
     elements.badgeImage.src = '';
     elements.badgeImage.classList.add('hidden');
     elements.imagePlaceholder.classList.remove('hidden');
@@ -182,24 +248,35 @@ function handleDragLeave(e) {
     elements.imageUploadArea.classList.remove('dragover');
 }
 
-function handleDrop(e) {
+async function handleDrop(e) {
     e.preventDefault();
     e.stopPropagation();
     elements.imageUploadArea.classList.remove('dragover');
     
     const files = e.dataTransfer.files;
     if (files.length > 0 && files[0].type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const imageData = event.target.result;
-            state.imageData = imageData;
-            localStorage.setItem('badge-image', imageData);
-            
-            elements.badgeImage.src = imageData;
-            elements.badgeImage.classList.remove('hidden');
-            elements.imagePlaceholder.classList.add('hidden');
-        };
-        reader.readAsDataURL(files[0]);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const imageData = event.target.result;
+                
+                // Open cropper
+                const croppedData = await imageCropper.open(imageData);
+                
+                if (croppedData) {
+                    state.imageData = imageData;
+                    state.croppedImageData = croppedData;
+                    
+                    elements.badgeImage.src = croppedData;
+                    elements.badgeImage.classList.remove('hidden');
+                    elements.imagePlaceholder.classList.add('hidden');
+                }
+            };
+            reader.readAsDataURL(files[0]);
+        } catch (error) {
+            console.error('Drop error:', error);
+            alert('图片上传失败，请重试');
+        }
     }
 }
 
@@ -220,6 +297,11 @@ function applyStyle(style) {
     if (style !== 'gradient') {
         elements.badge.classList.add(`style-${style}`);
     }
+    
+    // Update button state
+    document.querySelectorAll('.style-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.style === style);
+    });
 }
 
 function applyShape(shape) {
@@ -227,6 +309,11 @@ function applyShape(shape) {
     if (shape !== 'rounded') {
         elements.badge.classList.add(`shape-${shape}`);
     }
+    
+    // Update button state
+    document.querySelectorAll('.shape-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.shape === shape);
+    });
 }
 
 // Effects management
@@ -235,7 +322,7 @@ function handleEffectChange() {
     state.effects.animate = elements.animateEffect.checked;
     state.effects.glow = elements.glowEffect.checked;
     
-    localStorage.setItem('badge-effects', JSON.stringify(state.effects));
+    saveSettings();
     updateEffects();
 }
 
@@ -262,62 +349,216 @@ function updateEffects() {
     }
 }
 
+// Save badge to gallery
+async function saveBadge() {
+    try {
+        const badgeData = {
+            title: state.title,
+            subtitle: state.subtitle,
+            imageData: state.imageData,
+            croppedImageData: state.croppedImageData,
+            style: state.style,
+            shape: state.shape,
+            effects: { ...state.effects },
+            date: elements.badgeDate.textContent
+        };
+        
+        if (state.editingBadgeId) {
+            await badgeDB.updateBadge(state.editingBadgeId, badgeData);
+            state.editingBadgeId = null;
+            alert('吧唧已更新！');
+        } else {
+            await badgeDB.saveBadge(badgeData);
+            alert('吧唧已保存到吧唧墙！');
+        }
+        
+        await loadGallery();
+    } catch (error) {
+        console.error('Failed to save badge:', error);
+        alert('保存失败，请重试');
+    }
+}
+
+// Load badge from gallery
+async function loadBadge(id) {
+    try {
+        const badge = await badgeDB.getBadge(id);
+        if (badge) {
+            state.title = badge.title;
+            state.subtitle = badge.subtitle;
+            state.imageData = badge.imageData;
+            state.croppedImageData = badge.croppedImageData;
+            state.style = badge.style;
+            state.shape = badge.shape;
+            state.effects = badge.effects;
+            state.editingBadgeId = id;
+            
+            // Update UI
+            elements.titleInput.value = state.title;
+            elements.subtitleInput.value = state.subtitle;
+            elements.badgeTitle.textContent = state.title;
+            elements.badgeSubtitle.textContent = state.subtitle;
+            
+            if (state.croppedImageData) {
+                elements.badgeImage.src = state.croppedImageData;
+                elements.badgeImage.classList.remove('hidden');
+                elements.imagePlaceholder.classList.add('hidden');
+            } else {
+                clearImage();
+            }
+            
+            applyStyle(state.style);
+            applyShape(state.shape);
+            
+            elements.shineEffect.checked = state.effects.shine;
+            elements.animateEffect.checked = state.effects.animate;
+            elements.glowEffect.checked = state.effects.glow;
+            updateEffects();
+            
+            // Switch to editor tab
+            switchTab('editor');
+        }
+    } catch (error) {
+        console.error('Failed to load badge:', error);
+        alert('加载失败，请重试');
+    }
+}
+
+// Delete badge from gallery
+async function deleteBadge(id) {
+    if (confirm('确定要删除这个吧唧吗？')) {
+        try {
+            await badgeDB.deleteBadge(id);
+            await loadGallery();
+        } catch (error) {
+            console.error('Failed to delete badge:', error);
+            alert('删除失败，请重试');
+        }
+    }
+}
+
+// Clear all badges
+async function clearAllBadges() {
+    if (confirm('确定要清空所有吧唧吗？此操作无法撤销！')) {
+        try {
+            await badgeDB.clearAllBadges();
+            await loadGallery();
+        } catch (error) {
+            console.error('Failed to clear badges:', error);
+            alert('清空失败，请重试');
+        }
+    }
+}
+
+// Load gallery
+async function loadGallery() {
+    try {
+        const badges = await badgeDB.getAllBadges();
+        
+        if (badges.length === 0) {
+            elements.galleryEmpty.classList.remove('hidden');
+            elements.galleryGrid.innerHTML = '';
+            return;
+        }
+        
+        elements.galleryEmpty.classList.add('hidden');
+        
+        // Sort by timestamp descending
+        badges.sort((a, b) => b.timestamp - a.timestamp);
+        
+        elements.galleryGrid.innerHTML = badges.map(badge => {
+            const date = new Date(badge.timestamp);
+            const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+            
+            return `
+                <div class="gallery-item" data-id="${badge.id}">
+                    <div class="gallery-item-actions">
+                        <button class="gallery-item-btn load" onclick="loadBadge(${badge.id})" title="加载">
+                            ✏️
+                        </button>
+                        <button class="gallery-item-btn delete" onclick="deleteBadge(${badge.id})" title="删除">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="gallery-item-badge">
+                        ${renderBadgePreview(badge)}
+                    </div>
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">${badge.title}</div>
+                        <div class="gallery-item-date">${dateStr}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Failed to load gallery:', error);
+    }
+}
+
+// Render badge preview for gallery
+function renderBadgePreview(badge) {
+    const styleClass = badge.style !== 'gradient' ? `style-${badge.style}` : '';
+    const shapeClass = badge.shape !== 'rounded' ? `shape-${badge.shape}` : '';
+    const glowClass = badge.effects.glow ? 'glow' : '';
+    
+    const imgHtml = badge.croppedImageData 
+        ? `<img src="${badge.croppedImageData}" alt="" class="badge-image">`
+        : `<div class="image-placeholder">
+             <div class="placeholder-icon">🖼️</div>
+           </div>`;
+    
+    return `
+        <div class="badge ${styleClass} ${shapeClass} ${glowClass}">
+            <div class="badge-image-wrapper">
+                ${imgHtml}
+            </div>
+            <div class="badge-text-container">
+                <div class="badge-title">${badge.title}</div>
+                <div class="badge-subtitle">${badge.subtitle}</div>
+            </div>
+            <div class="badge-footer">
+                <div class="badge-date">${badge.date}</div>
+            </div>
+        </div>
+    `;
+}
+
+// Tab switching
+function switchTab(tab) {
+    state.currentTab = tab;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    if (tab === 'editor') {
+        document.getElementById('editorTab').classList.add('active');
+    } else if (tab === 'gallery') {
+        document.getElementById('galleryTab').classList.add('active');
+        loadGallery();
+    }
+}
+
 // Download badge
 function downloadBadge() {
-    // Create a canvas to render the badge
-    const badge = elements.badge;
-    const canvas = document.createElement('canvas');
-    const scale = 3; // Higher resolution
-    const rect = badge.getBoundingClientRect();
-    
-    canvas.width = rect.width * scale;
-    canvas.height = rect.height * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-    
-    // Use html2canvas-like approach manually
-    // For now, we'll use a simple approach - download the current view
-    // In a production app, you'd use html2canvas library
-    
-    // Alternative: Create a blob URL and download
-    try {
-        // Create a temporary container
-        const container = document.createElement('div');
-        container.style.cssText = `
-            position: absolute;
-            left: -9999px;
-            width: ${rect.width}px;
-            height: ${rect.height}px;
-        `;
-        
-        const badgeClone = badge.cloneNode(true);
-        container.appendChild(badgeClone);
-        document.body.appendChild(container);
-        
-        // For now, show alert that download would happen
-        // In production, use html2canvas or similar library
-        alert('下载功能需要额外的库支持。\n\n您可以:\n1. 右键点击吧唧 → 另存为图片\n2. 使用截图工具保存');
-        
-        document.body.removeChild(container);
-    } catch (error) {
-        console.error('Download error:', error);
-        alert('下载失败，请使用截图工具保存吧唧');
-    }
+    // Simple download implementation
+    alert('下载功能提示:\n\n1. 右键点击吧唧 → 另存为图片\n2. 使用截图工具保存\n3. 或者先保存到吧唧墙');
 }
 
 // Reset to defaults
 function resetToDefaults() {
     if (confirm('确定要重置为默认设置吗？')) {
-        // Clear all saved data
-        localStorage.removeItem('badge-image');
-        localStorage.removeItem('badge-style');
-        localStorage.removeItem('badge-shape');
-        localStorage.removeItem('badge-effects');
-        
         // Reset state
         state.title = '我的电子吧唧';
         state.subtitle = '定制你的专属徽章';
         state.imageData = null;
+        state.croppedImageData = null;
         state.style = 'gradient';
         state.shape = 'rounded';
         state.effects = {
@@ -325,6 +566,7 @@ function resetToDefaults() {
             animate: true,
             glow: false
         };
+        state.editingBadgeId = null;
         
         // Reset UI
         elements.titleInput.value = state.title;
@@ -334,25 +576,16 @@ function resetToDefaults() {
         
         clearImage();
         
-        // Reset style buttons
-        document.querySelectorAll('.style-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.style === 'gradient');
-        });
         applyStyle('gradient');
-        
-        // Reset shape buttons
-        document.querySelectorAll('.shape-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.shape === 'rounded');
-        });
         applyShape('rounded');
         
-        // Reset effects
         elements.shineEffect.checked = true;
         elements.animateEffect.checked = true;
         elements.glowEffect.checked = false;
         updateEffects();
         
         updateDate();
+        saveSettings();
     }
 }
 
