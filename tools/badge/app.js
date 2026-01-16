@@ -10,8 +10,7 @@ const state = {
     theme: 'dark',
     title: '我的电子吧唧',
     subtitle: '定制你的专属徽章',
-    imageData: null,
-    croppedImageData: null,
+    imageData: null, // Stores cropped image data
     style: 'gradient',
     shape: 'rounded',
     effects: {
@@ -49,6 +48,12 @@ const elements = {
     galleryEmpty: document.getElementById('galleryEmpty'),
     clearAllBadgesBtn: document.getElementById('clearAllBadgesBtn')
 };
+
+// Helper function to get image data with backward compatibility
+function getImageData(badge) {
+    // Prefer croppedImageData from old schema, fallback to new imageData field
+    return badge.croppedImageData || badge.imageData;
+}
 
 // Initialize app
 async function init() {
@@ -211,14 +216,14 @@ async function handleImageUpload(e) {
         try {
             const reader = new FileReader();
             reader.onload = async (event) => {
-                const imageData = event.target.result;
+                const originalImageData = event.target.result;
                 
                 // Open cropper
-                const croppedData = await imageCropper.open(imageData);
+                const croppedData = await imageCropper.open(originalImageData);
                 
                 if (croppedData) {
-                    state.imageData = imageData;
-                    state.croppedImageData = croppedData;
+                    // Only store the cropped image
+                    state.imageData = croppedData;
                     
                     elements.badgeImage.src = croppedData;
                     elements.badgeImage.classList.remove('hidden');
@@ -235,7 +240,6 @@ async function handleImageUpload(e) {
 
 function clearImage() {
     state.imageData = null;
-    state.croppedImageData = null;
     elements.badgeImage.src = '';
     elements.badgeImage.classList.add('hidden');
     elements.imagePlaceholder.classList.remove('hidden');
@@ -265,14 +269,14 @@ async function handleDrop(e) {
         try {
             const reader = new FileReader();
             reader.onload = async (event) => {
-                const imageData = event.target.result;
+                const originalImageData = event.target.result;
                 
                 // Open cropper
-                const croppedData = await imageCropper.open(imageData);
+                const croppedData = await imageCropper.open(originalImageData);
                 
                 if (croppedData) {
-                    state.imageData = imageData;
-                    state.croppedImageData = croppedData;
+                    // Only store the cropped image
+                    state.imageData = croppedData;
                     
                     elements.badgeImage.src = croppedData;
                     elements.badgeImage.classList.remove('hidden');
@@ -362,8 +366,7 @@ async function saveBadge() {
         const badgeData = {
             title: state.title,
             subtitle: state.subtitle,
-            imageData: state.imageData,
-            croppedImageData: state.croppedImageData,
+            imageData: state.imageData, // Already contains cropped image
             style: state.style,
             shape: state.shape,
             effects: { ...state.effects },
@@ -393,8 +396,7 @@ async function loadBadge(id) {
         if (badge) {
             state.title = badge.title;
             state.subtitle = badge.subtitle;
-            state.imageData = badge.imageData;
-            state.croppedImageData = badge.croppedImageData;
+            state.imageData = getImageData(badge);
             state.style = badge.style;
             state.shape = badge.shape;
             state.effects = badge.effects;
@@ -406,8 +408,8 @@ async function loadBadge(id) {
             elements.badgeTitle.textContent = state.title;
             elements.badgeSubtitle.textContent = state.subtitle;
             
-            if (state.croppedImageData) {
-                elements.badgeImage.src = state.croppedImageData;
+            if (state.imageData) {
+                elements.badgeImage.src = state.imageData;
                 elements.badgeImage.classList.remove('hidden');
                 elements.imagePlaceholder.classList.add('hidden');
             } else {
@@ -529,8 +531,9 @@ function renderBadgePreview(badge) {
     const shapeClass = badge.shape !== 'rounded' ? `shape-${badge.shape}` : '';
     const glowClass = badge.effects.glow ? 'glow' : '';
     
-    const imgHtml = badge.croppedImageData 
-        ? `<img src="${badge.croppedImageData}" alt="" class="badge-image">`
+    const imageData = getImageData(badge);
+    const imgHtml = imageData 
+        ? `<img src="${imageData}" alt="" class="badge-image">`
         : `<div class="image-placeholder">
              <div class="placeholder-icon">🖼️</div>
            </div>`;
@@ -606,7 +609,6 @@ function resetToDefaults() {
         state.title = '我的电子吧唧';
         state.subtitle = '定制你的专属徽章';
         state.imageData = null;
-        state.croppedImageData = null;
         state.style = 'gradient';
         state.shape = 'rounded';
         state.effects = {
