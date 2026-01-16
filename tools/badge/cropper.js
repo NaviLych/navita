@@ -89,17 +89,20 @@ class ImageCropper {
             const mimeMatch = imageData.match(/^data:([^;]+)/);
             if (mimeMatch) {
                 const mimeType = mimeMatch[1];
-                // Map supported formats, default to PNG for unsupported
-                const supportedFormats = [
+                // Only preserve formats that canvas.toDataURL() natively supports
+                // Other formats (GIF, BMP, SVG, AVIF, TIFF) will be converted to PNG
+                // This list is separate from SUPPORTED_IMAGE_TYPES in app.js because
+                // it reflects canvas export capabilities, not input acceptance
+                const canvasExportFormats = [
                     'image/jpeg',
                     'image/png',
                     'image/webp'
                 ];
                 
-                if (supportedFormats.includes(mimeType)) {
+                if (canvasExportFormats.includes(mimeType)) {
                     this.imageFormat = mimeType;
                 } else {
-                    // For formats not supported in canvas.toDataURL (SVG, BMP, etc), convert to PNG
+                    // For formats not supported in canvas.toDataURL, convert to PNG
                     this.imageFormat = 'image/png';
                 }
             }
