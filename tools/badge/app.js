@@ -5,20 +5,6 @@ const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
                         '3. 保存到吧唧墙后随时查看\n\n' +
                         '提示: 完整的下载功能需要html2canvas库支持';
 
-// Supported image MIME types
-// Note: The validation uses startsWith('image/') to accept any image format,
-// making it future-proof for new formats. This list is mainly for documentation.
-const SUPPORTED_IMAGE_TYPES = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp',
-    'image/svg+xml',
-    'image/avif',
-    'image/tiff'
-];
-
 // State management
 const state = {
     theme: 'dark',
