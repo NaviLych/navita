@@ -5,6 +5,8 @@ const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
                         '3. 保存到吧唧墙后随时查看\n\n' +
                         '提示: 完整的下载功能需要html2canvas库支持';
 
+const UNSUPPORTED_FILE_MESSAGE = '不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）';
+
 // State management
 const state = {
     theme: 'dark',
@@ -212,29 +214,36 @@ function updateDate() {
 // Image handling with cropping
 async function handleImageUpload(e) {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const originalImageData = event.target.result;
+    if (!file) return;
+    
+    // Check if file type is an image format
+    // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
+    if (!file.type.startsWith('image/')) {
+        alert(UNSUPPORTED_FILE_MESSAGE);
+        return;
+    }
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const originalImageData = event.target.result;
+            
+            // Open cropper
+            const croppedData = await imageCropper.open(originalImageData);
+            
+            if (croppedData) {
+                // Only store the cropped image
+                state.imageData = croppedData;
                 
-                // Open cropper
-                const croppedData = await imageCropper.open(originalImageData);
-                
-                if (croppedData) {
-                    // Only store the cropped image
-                    state.imageData = croppedData;
-                    
-                    elements.badgeImage.src = croppedData;
-                    elements.badgeImage.classList.remove('hidden');
-                    elements.imagePlaceholder.classList.add('hidden');
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            console.error('Image upload error:', error);
-            alert('图片上传失败，请重试');
-        }
+                elements.badgeImage.src = croppedData;
+                elements.badgeImage.classList.remove('hidden');
+                elements.imagePlaceholder.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Image upload error:', error);
+        alert('图片上传失败，请重试');
     }
 }
 
@@ -265,29 +274,38 @@ async function handleDrop(e) {
     elements.imageUploadArea.classList.remove('dragover');
     
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type.startsWith('image/')) {
-        try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const originalImageData = event.target.result;
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    // Check if file type is an image format
+    // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
+    if (!file.type.startsWith('image/')) {
+        alert(UNSUPPORTED_FILE_MESSAGE);
+        return;
+    }
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const originalImageData = event.target.result;
+            
+            // Open cropper
+            const croppedData = await imageCropper.open(originalImageData);
+            
+            if (croppedData) {
+                // Only store the cropped image
+                state.imageData = croppedData;
                 
-                // Open cropper
-                const croppedData = await imageCropper.open(originalImageData);
-                
-                if (croppedData) {
-                    // Only store the cropped image
-                    state.imageData = croppedData;
-                    
-                    elements.badgeImage.src = croppedData;
-                    elements.badgeImage.classList.remove('hidden');
-                    elements.imagePlaceholder.classList.add('hidden');
-                }
-            };
-            reader.readAsDataURL(files[0]);
-        } catch (error) {
-            console.error('Drop error:', error);
-            alert('图片上传失败，请重试');
-        }
+                elements.badgeImage.src = croppedData;
+                elements.badgeImage.classList.remove('hidden');
+                elements.imagePlaceholder.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Drop error:', error);
+        alert('图片上传失败，请重试');
     }
 }
 
