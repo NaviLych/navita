@@ -465,8 +465,8 @@ function captureAnimatedVideo(badge) {
             
             const stream = canvas.captureStream(DOWNLOAD_CONFIG.VIDEO_FPS);
             
-            // Determine best video format
-            let mimeType = 'video/webm;codecs=vp9';
+            // Determine best video format (prefer MP4, fallback to WebM)
+            let mimeType;
             if (MediaRecorder.isTypeSupported('video/mp4')) {
                 mimeType = 'video/mp4';
             } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
@@ -528,11 +528,6 @@ function captureAnimatedVideo(badge) {
             };
             
             const renderFrame = () => {
-                if (frameCount >= totalFrames) {
-                    setTimeout(() => mediaRecorder.stop(), 100);
-                    return;
-                }
-                
                 try {
                     // Capture frame using SVG method
                     const svgData = createInlineSVGSnapshot(badge, rect.width, rect.height);
@@ -576,8 +571,8 @@ function captureAnimatedVideo(badge) {
 // Download both files
 async function downloadFiles(imageBlob, videoBlob) {
     // Generate timestamp for unique filenames (format: YYYY-MM-DDTHH-MM-SS)
-    const isoString = new Date().toISOString(); // e.g., "2026-01-16T16:43:50.895Z"
-    const timestamp = isoString.replace(/[:.]/g, '-').substring(0, 19); // e.g., "2026-01-16T16-43-50"
+    const isoString = new Date().toISOString();
+    const timestamp = isoString.replace(/[:.]/g, '-').substring(0, 19);
     
     // Determine video extension based on blob type
     const videoType = videoBlob.type;
