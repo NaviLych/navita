@@ -229,11 +229,13 @@ async function handleImageUpload(e) {
     if (!file) return;
     
     // Check if file type is an image format
-    // Using startsWith('image/') to accept any image MIME type for future compatibility
-    const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
+    // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
+    if (!file.type.startsWith('image/')) {
+        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
+        return;
+    }
     
-    if (isImageFile) {
-        try {
+    try {
             const reader = new FileReader();
             reader.onload = async (event) => {
                 const originalImageData = event.target.result;
@@ -255,9 +257,6 @@ async function handleImageUpload(e) {
             console.error('Image upload error:', error);
             alert('图片上传失败，请重试');
         }
-    } else {
-        alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
-    }
 }
 
 function clearImage() {
@@ -292,34 +291,33 @@ async function handleDrop(e) {
     const file = files[0];
     
     // Check if file type is an image format
-    // Using startsWith('image/') to accept any image MIME type for future compatibility
-    const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
-    
-    if (isImageFile) {
-        try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const originalImageData = event.target.result;
-                
-                // Open cropper
-                const croppedData = await imageCropper.open(originalImageData);
-                
-                if (croppedData) {
-                    // Only store the cropped image
-                    state.imageData = croppedData;
-                    
-                    elements.badgeImage.src = croppedData;
-                    elements.badgeImage.classList.remove('hidden');
-                    elements.imagePlaceholder.classList.add('hidden');
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            console.error('Drop error:', error);
-            alert('图片上传失败，请重试');
-        }
-    } else {
+    // Accepts any image MIME type for future compatibility (e.g., image/heic, image/jxl)
+    if (!file.type.startsWith('image/')) {
         alert('不支持的文件格式，请上传图片文件（JPG、PNG、GIF、WEBP、BMP、SVG、AVIF 等）');
+        return;
+    }
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const originalImageData = event.target.result;
+            
+            // Open cropper
+            const croppedData = await imageCropper.open(originalImageData);
+            
+            if (croppedData) {
+                // Only store the cropped image
+                state.imageData = croppedData;
+                
+                elements.badgeImage.src = croppedData;
+                elements.badgeImage.classList.remove('hidden');
+                elements.imagePlaceholder.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Drop error:', error);
+        alert('图片上传失败，请重试');
     }
 }
 
