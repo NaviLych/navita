@@ -517,6 +517,16 @@ function captureAnimatedVideo(badge) {
             // Render frames
             const ctx = canvas.getContext('2d');
             
+            // Helper function to handle frame completion
+            const completeFrame = () => {
+                frameCount++;
+                if (frameCount < totalFrames) {
+                    setTimeout(renderFrame, frameInterval);
+                } else {
+                    setTimeout(() => mediaRecorder.stop(), 100);
+                }
+            };
+            
             const renderFrame = () => {
                 if (frameCount >= totalFrames) {
                     setTimeout(() => mediaRecorder.stop(), 100);
@@ -537,36 +547,20 @@ function captureAnimatedVideo(badge) {
                         ctx.drawImage(img, 0, 0);
                         ctx.restore(); // Restore state
                         URL.revokeObjectURL(svgUrl);
-                        
-                        frameCount++;
-                        if (frameCount < totalFrames) {
-                            setTimeout(renderFrame, frameInterval);
-                        } else {
-                            setTimeout(() => mediaRecorder.stop(), 100);
-                        }
+                        completeFrame();
                     };
                     
                     img.onerror = () => {
                         URL.revokeObjectURL(svgUrl);
                         // Continue even if frame fails
-                        frameCount++;
-                        if (frameCount < totalFrames) {
-                            setTimeout(renderFrame, frameInterval);
-                        } else {
-                            setTimeout(() => mediaRecorder.stop(), 100);
-                        }
+                        completeFrame();
                     };
                     
                     img.src = svgUrl;
                 } catch (error) {
                     console.error('Frame capture error:', error);
                     // Continue recording even if frame fails
-                    frameCount++;
-                    if (frameCount < totalFrames) {
-                        setTimeout(renderFrame, frameInterval);
-                    } else {
-                        setTimeout(() => mediaRecorder.stop(), 100);
-                    }
+                    completeFrame();
                 }
             };
             
@@ -581,8 +575,9 @@ function captureAnimatedVideo(badge) {
 
 // Download both files
 async function downloadFiles(imageBlob, videoBlob) {
-    // Generate timestamp for unique filenames
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    // Generate timestamp for unique filenames (format: YYYY-MM-DDTHH-MM-SS)
+    const isoString = new Date().toISOString(); // e.g., "2026-01-16T16:43:50.895Z"
+    const timestamp = isoString.replace(/[:.]/g, '-').substring(0, 19); // e.g., "2026-01-16T16-43-50"
     
     // Determine video extension based on blob type
     const videoType = videoBlob.type;
