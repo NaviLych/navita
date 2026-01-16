@@ -1,3 +1,10 @@
+// Constants
+const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
+                        '1. 右键点击吧唧 → 另存为图片\n' +
+                        '2. 使用截图工具保存\n' +
+                        '3. 保存到吧唧墙后随时查看\n\n' +
+                        '提示: 完整的下载功能需要html2canvas库支持';
+
 // State management
 const state = {
     theme: 'dark',
@@ -495,16 +502,20 @@ async function loadGallery() {
         elements.galleryGrid.querySelectorAll('.gallery-item-btn.load').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const badgeId = parseInt(btn.dataset.badgeId);
-                loadBadge(badgeId);
+                const badgeId = parseInt(btn.dataset.badgeId, 10);
+                if (!isNaN(badgeId)) {
+                    loadBadge(badgeId);
+                }
             });
         });
         
         elements.galleryGrid.querySelectorAll('.gallery-item-btn.delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const badgeId = parseInt(btn.dataset.badgeId);
-                deleteBadge(badgeId);
+                const badgeId = parseInt(btn.dataset.badgeId, 10);
+                if (!isNaN(badgeId)) {
+                    deleteBadge(badgeId);
+                }
             });
         });
     } catch (error) {
@@ -563,6 +574,8 @@ function switchTab(tab) {
 }
 
 // Download badge
+// TODO: Implement proper image download using html2canvas library
+// See: https://html2canvas.hertzen.com/
 async function downloadBadge() {
     try {
         // Use modern browser API to convert badge to image
@@ -579,15 +592,7 @@ async function downloadBadge() {
         canvas.width = rect.width * scale;
         canvas.height = rect.height * scale;
         
-        // Note: For a complete implementation, you would need html2canvas library
-        // For now, show a helpful message with alternative methods
-        const message = '下载功能提示:\n\n' +
-                       '1. 右键点击吧唧 → 另存为图片\n' +
-                       '2. 使用截图工具保存\n' +
-                       '3. 保存到吧唧墙后随时查看\n\n' +
-                       '提示: 完整的下载功能需要html2canvas库支持';
-        
-        alert(message);
+        alert(DOWNLOAD_MESSAGE);
     } catch (error) {
         console.error('Download error:', error);
         alert('操作失败，请使用右键菜单或截图工具保存');

@@ -56,10 +56,12 @@ class BadgeDB {
         const transaction = this.db.transaction(['badges'], 'readwrite');
         const store = transaction.objectStore('badges');
         
+        // Preserve original timestamp if it exists
+        const existingBadge = await this.getBadge(id);
         const badge = {
             ...badgeData,
             id,
-            timestamp: Date.now()
+            timestamp: existingBadge?.timestamp || Date.now()
         };
 
         return new Promise((resolve, reject) => {
