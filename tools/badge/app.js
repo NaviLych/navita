@@ -5,6 +5,18 @@ const DOWNLOAD_MESSAGE = '下载功能提示:\n\n' +
                         '3. 保存到吧唧墙后随时查看\n\n' +
                         '提示: 完整的下载功能需要html2canvas库支持';
 
+// Supported image MIME types for explicit validation
+const SUPPORTED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/svg+xml',
+    'image/avif',
+    'image/tiff'
+];
+
 // State management
 const state = {
     theme: 'dark',
@@ -214,21 +226,8 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // List of supported image MIME types
-    const supportedImageTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-        'image/avif',
-        'image/tiff'
-    ];
-    
-    // Check if file type is supported
-    const isImageFile = file.type.startsWith('image/') || supportedImageTypes.includes(file.type);
+    // Check if file type is a supported image format
+    const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
     
     if (isImageFile) {
         try {
@@ -289,21 +288,8 @@ async function handleDrop(e) {
     
     const file = files[0];
     
-    // List of supported image MIME types
-    const supportedImageTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-        'image/avif',
-        'image/tiff'
-    ];
-    
-    // Check if file type is supported
-    const isImageFile = file.type.startsWith('image/') || supportedImageTypes.includes(file.type);
+    // Check if file type is a supported image format
+    const isImageFile = file.type.startsWith('image/') || SUPPORTED_IMAGE_TYPES.includes(file.type);
     
     if (isImageFile) {
         try {
