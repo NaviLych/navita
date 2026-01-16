@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <script src="db.js"></script>
+    <script src="cropper.js"></script>
     <!-- Animated Background -->
     <div class="background">
         <div class="particle"></div>
@@ -30,11 +32,27 @@
                 <span class="title-emoji">🎨</span>
                 <span class="title-text">电子吧唧生成器</span>
             </h1>
-            <button class="icon-btn" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
+            </div>
         </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="editor">
+                <span class="tab-icon">✏️</span>
+                <span class="tab-text">编辑器</span>
+            </button>
+            <button class="tab-btn" data-tab="gallery">
+                <span class="tab-icon">🖼️</span>
+                <span class="tab-text">吧唧墙</span>
+            </button>
+        </nav>
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Editor Tab -->
+            <div class="tab-content active" id="editorTab">
             <!-- Badge Preview Section -->
             <section class="preview-section">
                 <div class="section-title">预览</div>
@@ -61,6 +79,10 @@
                     <button class="btn btn-download" id="downloadBtn" title="下载吧唧">
                         <span class="btn-icon">💾</span>
                         <span class="btn-text">下载吧唧</span>
+                    </button>
+                    <button class="btn btn-save" id="saveBadgeBtn" title="保存到吧唧墙">
+                        <span class="btn-icon">⭐</span>
+                        <span class="btn-text">保存吧唧</span>
                     </button>
                 </div>
             </section>
@@ -142,7 +164,29 @@
                     </button>
                 </div>
             </section>
-        </main>
+        </div>
+
+        <!-- Gallery Tab -->
+        <div class="tab-content" id="galleryTab">
+            <section class="gallery-section">
+                <div class="gallery-header">
+                    <div class="section-title">我的吧唧墙</div>
+                    <button class="btn btn-clear" id="clearAllBadgesBtn">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">清空全部</span>
+                    </button>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- Badges will be loaded here -->
+                </div>
+                <div class="gallery-empty" id="galleryEmpty">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-text">还没有保存的吧唧</div>
+                    <div class="empty-hint">在编辑器中创建并保存你的第一个吧唧吧！</div>
+                </div>
+            </section>
+        </div>
+    </main>
     </div>
 
     <script src="app.js"></script>
