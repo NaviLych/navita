@@ -3,4 +3,5 @@ node_modules/
 package-lock.json
 package.json
 test-pdf.js
-test-merge.js
+test-merge.js*.bak
+*.backup*
