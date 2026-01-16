@@ -262,47 +262,228 @@ function updateEffects() {
     }
 }
 
-// Download badge
-function downloadBadge() {
-    // Create a canvas to render the badge
+// Download badge as Apple Live Photo format
+async function downloadBadge() {
     const badge = elements.badge;
-    const canvas = document.createElement('canvas');
-    const scale = 3; // Higher resolution
-    const rect = badge.getBoundingClientRect();
     
-    canvas.width = rect.width * scale;
-    canvas.height = rect.height * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-    
-    // Use html2canvas-like approach manually
-    // For now, we'll use a simple approach - download the current view
-    // In a production app, you'd use html2canvas library
-    
-    // Alternative: Create a blob URL and download
     try {
-        // Create a temporary container
-        const container = document.createElement('div');
-        container.style.cssText = `
-            position: absolute;
-            left: -9999px;
-            width: ${rect.width}px;
-            height: ${rect.height}px;
-        `;
+        // Show loading state
+        elements.downloadBtn.disabled = true;
+        elements.downloadBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">生成中...</span>';
         
-        const badgeClone = badge.cloneNode(true);
-        container.appendChild(badgeClone);
-        document.body.appendChild(container);
+        // Step 1: Capture static image (JPEG for Live Photo compatibility)
+        const staticImage = await captureStaticImage(badge);
         
-        // For now, show alert that download would happen
-        // In production, use html2canvas or similar library
-        alert('下载功能需要额外的库支持。\n\n您可以:\n1. 右键点击吧唧 → 另存为图片\n2. 使用截图工具保存');
+        // Step 2: Capture animated video (MOV/MP4 for Live Photo)
+        const videoBlob = await captureAnimatedVideo(badge);
         
-        document.body.removeChild(container);
+        // Step 3: Download both files
+        await downloadFiles(staticImage, videoBlob);
+        
+        // Reset button state
+        elements.downloadBtn.disabled = false;
+        elements.downloadBtn.innerHTML = '<span class="btn-icon">💾</span><span class="btn-text">下载吧唧</span>';
+        
+        // Show success message
+        alert('✅ Live Photo 已生成！\n\n已下载两个文件:\n1. badge-photo.jpg (静态图片)\n2. badge-video.mov (动画视频)\n\n将这两个文件传输到您的 iPhone，可以作为 Live Photo 使用。');
+        
     } catch (error) {
         console.error('Download error:', error);
-        alert('下载失败，请使用截图工具保存吧唧');
+        elements.downloadBtn.disabled = false;
+        elements.downloadBtn.innerHTML = '<span class="btn-icon">💾</span><span class="btn-text">下载吧唧</span>';
+        alert('下载失败: ' + error.message + '\n\n请确保浏览器支持此功能。');
     }
+}
+
+// Capture static image using html2canvas
+async function captureStaticImage(badge) {
+    return new Promise((resolve, reject) => {
+        // Temporarily disable animations for static capture
+        const wasAnimating = state.effects.animate;
+        if (wasAnimating) {
+            badge.classList.remove('animate');
+        }
+        
+        html2canvas(badge, {
+            backgroundColor: null,
+            scale: 3, // High resolution
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+        }).then(canvas => {
+            // Restore animation state
+            if (wasAnimating) {
+                badge.classList.add('animate');
+            }
+            
+            // Convert to JPEG blob (Apple Live Photos use JPEG)
+            canvas.toBlob(blob => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    reject(new Error('无法生成图片'));
+                }
+            }, 'image/jpeg', 0.95);
+        }).catch(error => {
+            // Restore animation state
+            if (wasAnimating) {
+                badge.classList.add('animate');
+            }
+            reject(error);
+        });
+    });
+}
+
+// Capture animated video using canvas recording
+async function captureAnimatedVideo(badge) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Ensure animations are enabled
+            const wasAnimating = state.effects.animate;
+            if (!wasAnimating) {
+                badge.classList.add('animate');
+            }
+            
+            // Create an offscreen canvas to render frames
+            const rect = badge.getBoundingClientRect();
+            const scale = 2; // Balance quality and file size
+            const canvas = document.createElement('canvas');
+            canvas.width = rect.width * scale;
+            canvas.height = rect.height * scale;
+            
+            // Capture stream from canvas
+            const stream = canvas.captureStream(30); // 30 fps
+            
+            // Determine best video format
+            let mimeType = 'video/webm;codecs=vp9';
+            if (MediaRecorder.isTypeSupported('video/mp4')) {
+                mimeType = 'video/mp4';
+            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                mimeType = 'video/webm;codecs=vp9';
+            } else if (MediaRecorder.isTypeSupported('video/webm')) {
+                mimeType = 'video/webm';
+            } else {
+                throw new Error('浏览器不支持视频录制');
+            }
+            
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: mimeType,
+                videoBitsPerSecond: 2500000 // 2.5 Mbps
+            });
+            
+            const chunks = [];
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                }
+            };
+            
+            mediaRecorder.onstop = () => {
+                // Restore animation state
+                if (!wasAnimating) {
+                    badge.classList.remove('animate');
+                }
+                
+                const blob = new Blob(chunks, { type: mimeType });
+                resolve(blob);
+            };
+            
+            mediaRecorder.onerror = (e) => {
+                // Restore animation state
+                if (!wasAnimating) {
+                    badge.classList.remove('animate');
+                }
+                reject(new Error('视频录制失败'));
+            };
+            
+            // Start recording
+            mediaRecorder.start();
+            
+            // Record for 3 seconds (typical Live Photo duration)
+            const duration = 3000;
+            const fps = 30;
+            const frameInterval = 1000 / fps;
+            let frameCount = 0;
+            const totalFrames = duration / frameInterval;
+            
+            // Render frames to canvas
+            const renderFrame = async () => {
+                if (frameCount >= totalFrames) {
+                    // Stop recording after duration
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 100);
+                    return;
+                }
+                
+                try {
+                    // Capture current frame using html2canvas
+                    const frameCanvas = await html2canvas(badge, {
+                        backgroundColor: null,
+                        scale: scale,
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: rect.width,
+                        height: rect.height
+                    });
+                    
+                    // Draw to our canvas
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(frameCanvas, 0, 0);
+                    
+                    frameCount++;
+                    
+                    // Schedule next frame
+                    if (frameCount < totalFrames) {
+                        setTimeout(renderFrame, frameInterval);
+                    } else {
+                        setTimeout(() => mediaRecorder.stop(), 100);
+                    }
+                } catch (error) {
+                    console.error('Frame render error:', error);
+                    mediaRecorder.stop();
+                }
+            };
+            
+            // Start rendering
+            renderFrame();
+            
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+// Download both files
+async function downloadFiles(imageBlob, videoBlob) {
+    // Generate timestamp for unique filenames
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    
+    // Download static image (JPEG)
+    const imageUrl = URL.createObjectURL(imageBlob);
+    const imageLink = document.createElement('a');
+    imageLink.href = imageUrl;
+    imageLink.download = `badge-photo-${timestamp}.jpg`;
+    document.body.appendChild(imageLink);
+    imageLink.click();
+    document.body.removeChild(imageLink);
+    URL.revokeObjectURL(imageUrl);
+    
+    // Wait a bit before downloading video to avoid browser blocking
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Download video (MOV/WebM)
+    const videoUrl = URL.createObjectURL(videoBlob);
+    const videoLink = document.createElement('a');
+    videoLink.href = videoUrl;
+    // Use .mov extension for better iOS compatibility, even if it's webm
+    videoLink.download = `badge-video-${timestamp}.mov`;
+    document.body.appendChild(videoLink);
+    videoLink.click();
+    document.body.removeChild(videoLink);
+    URL.revokeObjectURL(videoUrl);
 }
 
 // Reset to defaults
