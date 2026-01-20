@@ -128,9 +128,9 @@ class RSSParser {
 
     // Extract plain text from HTML content
     extractPlainText(html, maxLength = 200) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        let text = div.textContent || div.innerText || '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        let text = doc.body.textContent || '';
         text = text.trim();
         if (text.length > maxLength) {
             text = text.substring(0, maxLength) + '...';
@@ -140,26 +140,41 @@ class RSSParser {
 
     // Sanitize HTML content
     sanitizeHTML(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
         // Remove script tags
-        const scripts = div.querySelectorAll('script');
+        const scripts = doc.querySelectorAll('script');
         scripts.forEach(script => script.remove());
 
-        // Remove event handlers
-        const allElements = div.querySelectorAll('*');
+        // Remove style tags
+        const styles = doc.querySelectorAll('style');
+        styles.forEach(style => style.remove());
+
+        // Remove event handlers and dangerous attributes
+        const allElements = doc.querySelectorAll('*');
         allElements.forEach(el => {
             const attributes = el.attributes;
             for (let i = attributes.length - 1; i >= 0; i--) {
                 const attr = attributes[i];
+                // Remove event handlers
                 if (attr.name.startsWith('on')) {
                     el.removeAttribute(attr.name);
                 }
+                // Remove javascript: protocol
+                if (attr.value && attr.value.toLowerCase().includes('javascript:')) {
+                    el.removeAttribute(attr.name);
+                }
+            }
+            
+            // Remove dangerous tags
+            const tagName = el.tagName.toLowerCase();
+            if (['iframe', 'object', 'embed', 'form'].includes(tagName)) {
+                el.remove();
             }
         });
 
-        return div.innerHTML;
+        return doc.body.innerHTML;
     }
 }
 

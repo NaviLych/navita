@@ -444,9 +444,10 @@ export function showToast(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <span>${message}</span>
-    `;
+    
+    const span = document.createElement('span');
+    span.textContent = message;
+    toast.appendChild(span);
 
     container.appendChild(toast);
 
