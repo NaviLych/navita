@@ -257,16 +257,48 @@ class UI {
         const dateStr = articlesManager.formatDate(article.pubDate);
         const starIcon = article.starred ? '★' : '☆';
 
-        this.elements.readerContent.innerHTML = `
-            <h1>${this.escapeHtml(article.title)}</h1>
-            <div class="article-meta">
-                <span class="article-source">${this.escapeHtml(feedName)}</span>
-                <span>•</span>
-                <span class="article-date">${dateStr}</span>
-                ${article.author ? `<span>•</span><span>${this.escapeHtml(article.author)}</span>` : ''}
-            </div>
-            <div class="article-body">${article.content}</div>
-        `;
+        // Create header elements safely
+        const title = document.createElement('h1');
+        title.textContent = article.title;
+
+        const meta = document.createElement('div');
+        meta.className = 'article-meta';
+        
+        const sourceSpan = document.createElement('span');
+        sourceSpan.className = 'article-source';
+        sourceSpan.textContent = feedName;
+        meta.appendChild(sourceSpan);
+        
+        const separator1 = document.createElement('span');
+        separator1.textContent = '•';
+        meta.appendChild(separator1);
+        
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'article-date';
+        dateSpan.textContent = dateStr;
+        meta.appendChild(dateSpan);
+        
+        if (article.author) {
+            const separator2 = document.createElement('span');
+            separator2.textContent = '•';
+            meta.appendChild(separator2);
+            
+            const authorSpan = document.createElement('span');
+            authorSpan.textContent = article.author;
+            meta.appendChild(authorSpan);
+        }
+
+        // Article body - content is already sanitized in rssParser.sanitizeHTML()
+        const body = document.createElement('div');
+        body.className = 'article-body';
+        // Content is sanitized by rssParser.sanitizeHTML() before storage
+        body.innerHTML = article.content || '';
+
+        // Clear and populate reader content
+        this.elements.readerContent.innerHTML = '';
+        this.elements.readerContent.appendChild(title);
+        this.elements.readerContent.appendChild(meta);
+        this.elements.readerContent.appendChild(body);
 
         this.elements.readerStar.textContent = starIcon;
         this.elements.readerSection.classList.remove('hidden');
@@ -431,8 +463,9 @@ class UI {
 
     // Utility: Escape HTML
     escapeHtml(text) {
+        if (text == null) return '';
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = String(text);
         return div.innerHTML;
     }
 }
