@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>RSS 阅读器</title>
+    <meta name="description" content="简洁功能丰富的RSS订阅阅读器">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6B35">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">📰 RSS 阅读器</h1>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn-icon" title="刷新所有订阅">
+                        <span class="icon">🔄</span>
+                    </button>
+                    <button id="theme-toggle" class="btn-icon" title="切换主题">
+                        <span class="icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar for feed list -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>我的订阅</h2>
+                    <button id="add-feed-btn" class="btn-add" title="添加订阅">➕</button>
+                </div>
+                <div class="feeds-list" id="feeds-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>还没有订阅源</p>
+                        <p class="hint">点击右上角 ➕ 添加</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Article list -->
+            <section class="articles-section" id="articles-section">
+                <div class="section-header">
+                    <h2 id="section-title">所有文章</h2>
+                    <div class="view-controls">
+                        <button id="view-unread" class="btn-view active" data-view="unread">未读</button>
+                        <button id="view-all" class="btn-view" data-view="all">全部</button>
+                        <button id="view-starred" class="btn-view" data-view="starred">收藏</button>
+                    </div>
+                </div>
+                <div class="articles-list" id="articles-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">📄</div>
+                        <p>没有文章</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Article reader -->
+            <article class="reader-section hidden" id="reader-section">
+                <div class="reader-header">
+                    <button id="close-reader" class="btn-icon" title="关闭">✕</button>
+                    <div class="reader-actions">
+                        <button id="reader-star" class="btn-icon" title="收藏">☆</button>
+                        <button id="reader-share" class="btn-icon" title="分享">🔗</button>
+                        <button id="open-original" class="btn-icon" title="打开原文">🌐</button>
+                    </div>
+                </div>
+                <div class="reader-content" id="reader-content">
+                    <!-- Article content will be loaded here -->
+                </div>
+            </article>
+        </main>
+
+        <!-- Mobile bottom nav -->
+        <nav class="mobile-nav">
+            <button class="nav-item active" data-view="feeds">
+                <span class="icon">📚</span>
+                <span class="label">订阅</span>
+            </button>
+            <button class="nav-item" data-view="articles">
+                <span class="icon">📄</span>
+                <span class="label">文章</span>
+            </button>
+            <button class="nav-item" data-view="settings">
+                <span class="icon">⚙️</span>
+                <span class="label">设置</span>
+            </button>
+        </nav>
+
+        <!-- Modals -->
+        <div id="modal-overlay" class="modal-overlay hidden"></div>
+        
+        <!-- Add Feed Modal -->
+        <div id="add-feed-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>添加 RSS 订阅</h3>
+                    <button class="btn-close" onclick="closeAddFeedModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="feed-url">RSS 地址</label>
+                        <input type="url" id="feed-url" placeholder="https://example.com/feed.xml" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="feed-name">名称（可选）</label>
+                        <input type="text" id="feed-name" placeholder="自定义订阅源名称">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeAddFeedModal()">取消</button>
+                    <button class="btn-primary" id="submit-feed">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>设置</h3>
+                    <button class="btn-close" onclick="closeSettingsModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <h4>显示设置</h4>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="auto-mark-read"> 
+                                阅读时自动标记为已读
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="show-images"> 
+                                显示文章图片
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h4>数据管理</h4>
+                        <button class="btn-secondary" id="export-data">导出数据</button>
+                        <button class="btn-secondary" id="import-data">导入数据</button>
+                        <button class="btn-danger" id="clear-data">清除所有数据</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/rss.js"></script>
+    <script type="module" src="js/feeds.js"></script>
+    <script type="module" src="js/articles.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
