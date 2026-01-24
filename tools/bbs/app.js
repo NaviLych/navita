@@ -3,6 +3,9 @@ class BBSForum {
     constructor() {
         this.posts = this.loadPosts();
         this.currentPost = null;
+        this.WELCOME_TITLE = '✨ 欢迎来到Reddit风格论坛';
+        this.WELCOME_DESC = '使用投票系统发现最好的内容';
+        this.WELCOME_ACTION = '点击上方"新建帖子"按钮开始创建你的第一个帖子！';
         this.initElements();
         this.initEventListeners();
         this.initTheme();
@@ -307,8 +310,9 @@ class BBSForum {
             const hasUpvoted = reply.upvotedBy.includes(userId);
             const hasDownvoted = reply.downvotedBy.includes(userId);
             const score = reply.upvotes - reply.downvotes;
-            // isOP is a boolean flag, not user input - safe to use in template
-            const opBadge = reply.isOP ? '<span class="op-badge">楼主</span>' : '';
+            // Validate isOP is boolean before using in template
+            const isOP = reply.isOP === true;
+            const opBadge = isOP ? '<span class="op-badge">楼主</span>' : '';
             return `
                 <div class="reply-item">
                     <div class="reply-vote">
@@ -484,10 +488,11 @@ class BBSForum {
         
         switch (this.currentSort) {
             case 'hot':
-                // Hot algorithm: score / (age in hours + 2)^1.5
+                // Hot algorithm: (score + 1) / (age in hours + 2)^1.5
+                // Adding 1 to score ensures positive scores get boosted
                 return posts.sort((a, b) => {
-                    const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
-                    const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+                    const scoreA = Math.max((a.upvotes || 0) - (a.downvotes || 0), 0) + 1;
+                    const scoreB = Math.max((b.upvotes || 0) - (b.downvotes || 0), 0) + 1;
                     const ageA = (Date.now() - new Date(a.time)) / 3600000 + 2;
                     const ageB = (Date.now() - new Date(b.time)) / 3600000 + 2;
                     const hotA = scoreA / Math.pow(ageA, 1.5);
@@ -526,9 +531,9 @@ class BBSForum {
             if (!welcomeCard) {
                 this.postsContainer.innerHTML = `
                     <div class="welcome-card">
-                        <h2>✨ 欢迎来到Reddit风格论坛</h2>
-                        <p>使用投票系统发现最好的内容</p>
-                        <p>点击上方"新建帖子"按钮开始创建你的第一个帖子！</p>
+                        <h2>${this.WELCOME_TITLE}</h2>
+                        <p>${this.WELCOME_DESC}</p>
+                        <p>${this.WELCOME_ACTION}</p>
                     </div>
                 `;
             }
