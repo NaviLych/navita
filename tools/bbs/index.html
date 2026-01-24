@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ffffff">
-    <title>论坛体</title>
+    <title>Reddit风格论坛</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
         <!-- 顶部导航栏 -->
         <header class="header">
             <div class="header-content">
-                <h1 class="logo">📖 论坛体</h1>
+                <h1 class="logo">🔥 Reddit风格论坛</h1>
                 <div class="header-controls">
                     <button class="btn-new-post" id="btnNewPost">+ 新建帖子</button>
                     <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
@@ -24,12 +24,19 @@
 
         <!-- 主内容区 -->
         <main class="main-content">
+            <!-- 排序工具栏 -->
+            <div class="sort-toolbar">
+                <button class="sort-btn active" data-sort="hot">🔥 热门</button>
+                <button class="sort-btn" data-sort="new">🆕 最新</button>
+                <button class="sort-btn" data-sort="top">⬆️ 最高分</button>
+            </div>
+            
             <!-- 帖子列表 -->
             <div class="posts-container" id="postsContainer">
                 <!-- 欢迎提示 -->
                 <div class="welcome-card">
-                    <h2>✨ 欢迎来到论坛体</h2>
-                    <p>模仿网络论坛（如贴吧、Reddit）的讨论形式来呈现内容</p>
+                    <h2>✨ 欢迎来到Reddit风格论坛</h2>
+                    <p>使用投票系统发现最好的内容</p>
                     <p>点击上方"新建帖子"按钮开始创建你的第一个帖子！</p>
                 </div>
             </div>
@@ -44,6 +51,14 @@
                 </div>
                 <div class="modal-body">
                     <input type="text" class="input-title" id="inputTitle" placeholder="帖子标题...">
+                    <select class="input-category" id="inputCategory">
+                        <option value="general">🌐 综合讨论</option>
+                        <option value="tech">💻 技术</option>
+                        <option value="life">🌱 生活</option>
+                        <option value="entertainment">🎮 娱乐</option>
+                        <option value="news">📰 新闻</option>
+                        <option value="question">❓ 提问</option>
+                    </select>
                     <textarea class="input-content" id="inputContent" placeholder="输入帖子内容...&#10;&#10;支持换行，可以讲述一个故事、提出一个问题，或者分享你的想法..." rows="8"></textarea>
                     <input type="text" class="input-author" id="inputAuthor" placeholder="作者昵称（可选）">
                 </div>

@@ -24,6 +24,7 @@ class BBSForum {
         this.inputTitle = document.getElementById('inputTitle');
         this.inputContent = document.getElementById('inputContent');
         this.inputAuthor = document.getElementById('inputAuthor');
+        this.inputCategory = document.getElementById('inputCategory');
         this.inputReply = document.getElementById('inputReply');
         this.inputReplyAuthor = document.getElementById('inputReplyAuthor');
         this.inputIsOP = document.getElementById('inputIsOP');
@@ -37,6 +38,12 @@ class BBSForum {
         this.postsContainer = document.getElementById('postsContainer');
         this.postDetail = document.getElementById('postDetail');
         this.repliesList = document.getElementById('repliesList');
+        
+        // Sort buttons
+        this.sortButtons = document.querySelectorAll('.sort-btn');
+        
+        // Current sort mode
+        this.currentSort = 'hot';
     }
 
     initEventListeners() {
@@ -55,6 +62,11 @@ class BBSForum {
         
         // Theme toggle
         this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        
+        // Sort buttons
+        this.sortButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => this.changeSort(e.target.dataset.sort));
+        });
         
         // Close modal on outside click
         this.postModal.addEventListener('click', (e) => {
@@ -104,6 +116,7 @@ class BBSForum {
         this.inputTitle.value = '';
         this.inputContent.value = '';
         this.inputAuthor.value = '';
+        this.inputCategory.value = 'general';
         this.postModal.classList.add('active');
         this.inputTitle.focus();
     }
@@ -121,6 +134,7 @@ class BBSForum {
         const title = this.inputTitle.value.trim();
         const content = this.inputContent.value.trim();
         const author = this.inputAuthor.value.trim() || '匿名网友';
+        const category = this.inputCategory.value;
 
         if (!title) {
             alert('请输入帖子标题');
@@ -137,10 +151,13 @@ class BBSForum {
             title,
             content,
             author,
+            category,
             time: new Date().toISOString(),
-            likes: 0,
+            upvotes: 0,
+            downvotes: 0,
             replies: [],
-            likedBy: []
+            upvotedBy: [],
+            downvotedBy: []
         };
 
         this.posts.unshift(post);
@@ -157,19 +174,68 @@ class BBSForum {
         }
     }
 
-    toggleLike(postId) {
+    upvotePost(postId) {
         const post = this.posts.find(p => p.id === postId);
         if (!post) return;
 
         const userId = this.getUserId();
-        const likedIndex = post.likedBy.indexOf(userId);
+        
+        // Initialize vote arrays if they don't exist (for old posts)
+        if (!post.upvotedBy) post.upvotedBy = [];
+        if (!post.downvotedBy) post.downvotedBy = [];
+        if (!post.upvotes) post.upvotes = 0;
+        if (!post.downvotes) post.downvotes = 0;
+        
+        const upvotedIndex = post.upvotedBy.indexOf(userId);
+        const downvotedIndex = post.downvotedBy.indexOf(userId);
 
-        if (likedIndex > -1) {
-            post.likedBy.splice(likedIndex, 1);
-            post.likes--;
+        // Remove downvote if exists
+        if (downvotedIndex > -1) {
+            post.downvotedBy.splice(downvotedIndex, 1);
+            post.downvotes--;
+        }
+
+        // Toggle upvote
+        if (upvotedIndex > -1) {
+            post.upvotedBy.splice(upvotedIndex, 1);
+            post.upvotes--;
         } else {
-            post.likedBy.push(userId);
-            post.likes++;
+            post.upvotedBy.push(userId);
+            post.upvotes++;
+        }
+
+        this.savePosts();
+        this.render();
+    }
+
+    downvotePost(postId) {
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) return;
+
+        const userId = this.getUserId();
+        
+        // Initialize vote arrays if they don't exist (for old posts)
+        if (!post.upvotedBy) post.upvotedBy = [];
+        if (!post.downvotedBy) post.downvotedBy = [];
+        if (!post.upvotes) post.upvotes = 0;
+        if (!post.downvotes) post.downvotes = 0;
+        
+        const upvotedIndex = post.upvotedBy.indexOf(userId);
+        const downvotedIndex = post.downvotedBy.indexOf(userId);
+
+        // Remove upvote if exists
+        if (upvotedIndex > -1) {
+            post.upvotedBy.splice(upvotedIndex, 1);
+            post.upvotes--;
+        }
+
+        // Toggle downvote
+        if (downvotedIndex > -1) {
+            post.downvotedBy.splice(downvotedIndex, 1);
+            post.downvotes--;
+        } else {
+            post.downvotedBy.push(userId);
+            post.downvotes++;
         }
 
         this.savePosts();
@@ -187,21 +253,32 @@ class BBSForum {
 
     renderPostDetail(post) {
         const userId = this.getUserId();
-        const isLiked = post.likedBy.includes(userId);
+        
+        // Initialize vote arrays if they don't exist (for old posts)
+        if (!post.upvotedBy) post.upvotedBy = [];
+        if (!post.downvotedBy) post.downvotedBy = [];
+        if (!post.upvotes) post.upvotes = 0;
+        if (!post.downvotes) post.downvotes = 0;
+        
+        const hasUpvoted = post.upvotedBy.includes(userId);
+        const hasDownvoted = post.downvotedBy.includes(userId);
+        const score = post.upvotes - post.downvotes;
 
         this.postDetail.innerHTML = `
             <div class="post-header">
                 <h1 class="post-title">${this.escapeHtml(post.title)}</h1>
             </div>
             <div class="post-meta">
+                <span class="post-category">${this.getCategoryDisplay(post.category || 'general')}</span>
                 <span class="post-author">👤 ${this.escapeHtml(post.author)}</span>
                 <span class="post-time">🕐 ${this.formatTime(post.time)}</span>
             </div>
             <div class="post-content">${this.escapeHtml(post.content)}</div>
             <div class="post-footer">
-                <div class="post-stat ${isLiked ? 'liked' : ''}" onclick="forum.toggleLike(${post.id})">
-                    <span class="post-stat-icon">${isLiked ? '❤️' : '🤍'}</span>
-                    <span>${post.likes}</span>
+                <div class="vote-controls">
+                    <button class="vote-btn upvote ${hasUpvoted ? 'active' : ''}" onclick="forum.upvotePostDetail(${post.id})">⬆</button>
+                    <span class="vote-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}">${score}</span>
+                    <button class="vote-btn downvote ${hasDownvoted ? 'active' : ''}" onclick="forum.downvotePostDetail(${post.id})">⬇</button>
                 </div>
                 <div class="post-stat">
                     <span class="post-stat-icon">💬</span>
@@ -221,21 +298,30 @@ class BBSForum {
 
         const userId = this.getUserId();
         this.repliesList.innerHTML = post.replies.map((reply, index) => {
-            const isLiked = reply.likedBy && reply.likedBy.includes(userId);
+            // Initialize vote arrays if they don't exist (for old replies)
+            if (!reply.upvotedBy) reply.upvotedBy = [];
+            if (!reply.downvotedBy) reply.downvotedBy = [];
+            if (!reply.upvotes) reply.upvotes = 0;
+            if (!reply.downvotes) reply.downvotes = 0;
+            
+            const hasUpvoted = reply.upvotedBy.includes(userId);
+            const hasDownvoted = reply.downvotedBy.includes(userId);
+            const score = reply.upvotes - reply.downvotes;
             // isOP is a boolean flag, not user input - safe to use in template
             const opBadge = reply.isOP ? '<span class="op-badge">楼主</span>' : '';
             return `
                 <div class="reply-item">
-                    <div class="reply-header">
-                        <span class="reply-author">${index + 1}楼 · ${this.escapeHtml(reply.author)} ${opBadge}</span>
-                        <span class="reply-time">${this.formatTime(reply.time)}</span>
+                    <div class="reply-vote">
+                        <button class="vote-btn-small upvote ${hasUpvoted ? 'active' : ''}" onclick="forum.upvoteReply(${post.id}, ${reply.id})">⬆</button>
+                        <span class="vote-score-small ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}">${score}</span>
+                        <button class="vote-btn-small downvote ${hasDownvoted ? 'active' : ''}" onclick="forum.downvoteReply(${post.id}, ${reply.id})">⬇</button>
                     </div>
-                    <div class="reply-content">${this.escapeHtml(reply.content)}</div>
-                    <div class="reply-footer">
-                        <div class="reply-like ${isLiked ? 'liked' : ''}" onclick="forum.toggleReplyLike(${post.id}, ${reply.id})">
-                            <span>${isLiked ? '❤️' : '🤍'}</span>
-                            <span>${reply.likes || 0}</span>
+                    <div class="reply-main">
+                        <div class="reply-header">
+                            <span class="reply-author">${index + 1}楼 · ${this.escapeHtml(reply.author)} ${opBadge}</span>
+                            <span class="reply-time">${this.formatTime(reply.time)}</span>
                         </div>
+                        <div class="reply-content">${this.escapeHtml(reply.content)}</div>
                     </div>
                 </div>
             `;
@@ -259,8 +345,10 @@ class BBSForum {
             content,
             author,
             time: new Date().toISOString(),
-            likes: 0,
-            likedBy: [],
+            upvotes: 0,
+            downvotes: 0,
+            upvotedBy: [],
+            downvotedBy: [],
             isOP: isOP
         };
 
@@ -276,7 +364,7 @@ class BBSForum {
         }
     }
 
-    toggleReplyLike(postId, replyId) {
+    upvoteReply(postId, replyId) {
         const post = this.posts.find(p => p.id === postId);
         if (!post) return;
 
@@ -284,22 +372,90 @@ class BBSForum {
         if (!reply) return;
 
         const userId = this.getUserId();
-        if (!reply.likedBy) reply.likedBy = [];
-        if (!reply.likes) reply.likes = 0;
+        
+        // Initialize vote arrays if they don't exist (for old replies)
+        if (!reply.upvotedBy) reply.upvotedBy = [];
+        if (!reply.downvotedBy) reply.downvotedBy = [];
+        if (!reply.upvotes) reply.upvotes = 0;
+        if (!reply.downvotes) reply.downvotes = 0;
+        
+        const upvotedIndex = reply.upvotedBy.indexOf(userId);
+        const downvotedIndex = reply.downvotedBy.indexOf(userId);
 
-        const likedIndex = reply.likedBy.indexOf(userId);
+        // Remove downvote if exists
+        if (downvotedIndex > -1) {
+            reply.downvotedBy.splice(downvotedIndex, 1);
+            reply.downvotes--;
+        }
 
-        if (likedIndex > -1) {
-            reply.likedBy.splice(likedIndex, 1);
-            reply.likes--;
+        // Toggle upvote
+        if (upvotedIndex > -1) {
+            reply.upvotedBy.splice(upvotedIndex, 1);
+            reply.upvotes--;
         } else {
-            reply.likedBy.push(userId);
-            reply.likes++;
+            reply.upvotedBy.push(userId);
+            reply.upvotes++;
         }
 
         this.savePosts();
         this.currentPost = post;
         this.renderReplies(post);
+    }
+
+    downvoteReply(postId, replyId) {
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) return;
+
+        const reply = post.replies.find(r => r.id === replyId);
+        if (!reply) return;
+
+        const userId = this.getUserId();
+        
+        // Initialize vote arrays if they don't exist (for old replies)
+        if (!reply.upvotedBy) reply.upvotedBy = [];
+        if (!reply.downvotedBy) reply.downvotedBy = [];
+        if (!reply.upvotes) reply.upvotes = 0;
+        if (!reply.downvotes) reply.downvotes = 0;
+        
+        const upvotedIndex = reply.upvotedBy.indexOf(userId);
+        const downvotedIndex = reply.downvotedBy.indexOf(userId);
+
+        // Remove upvote if exists
+        if (upvotedIndex > -1) {
+            reply.upvotedBy.splice(upvotedIndex, 1);
+            reply.upvotes--;
+        }
+
+        // Toggle downvote
+        if (downvotedIndex > -1) {
+            reply.downvotedBy.splice(downvotedIndex, 1);
+            reply.downvotes--;
+        } else {
+            reply.downvotedBy.push(userId);
+            reply.downvotes++;
+        }
+
+        this.savePosts();
+        this.currentPost = post;
+        this.renderReplies(post);
+    }
+
+    upvotePostDetail(postId) {
+        this.upvotePost(postId);
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+            this.currentPost = post;
+            this.renderPostDetail(post);
+        }
+    }
+
+    downvotePostDetail(postId) {
+        this.downvotePost(postId);
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+            this.currentPost = post;
+            this.renderPostDetail(post);
+        }
     }
 
     getUserId() {
@@ -311,6 +467,58 @@ class BBSForum {
         return userId;
     }
 
+    changeSort(sortType) {
+        this.currentSort = sortType;
+        this.sortButtons.forEach(btn => {
+            if (btn.dataset.sort === sortType) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        this.render();
+    }
+
+    getSortedPosts() {
+        const posts = [...this.posts];
+        
+        switch (this.currentSort) {
+            case 'hot':
+                // Hot algorithm: score / (age in hours + 2)^1.5
+                return posts.sort((a, b) => {
+                    const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+                    const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+                    const ageA = (Date.now() - new Date(a.time)) / 3600000 + 2;
+                    const ageB = (Date.now() - new Date(b.time)) / 3600000 + 2;
+                    const hotA = scoreA / Math.pow(ageA, 1.5);
+                    const hotB = scoreB / Math.pow(ageB, 1.5);
+                    return hotB - hotA;
+                });
+            case 'new':
+                return posts.sort((a, b) => new Date(b.time) - new Date(a.time));
+            case 'top':
+                return posts.sort((a, b) => {
+                    const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+                    const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+                    return scoreB - scoreA;
+                });
+            default:
+                return posts;
+        }
+    }
+
+    getCategoryDisplay(category) {
+        const categories = {
+            'general': '🌐 综合讨论',
+            'tech': '💻 技术',
+            'life': '🌱 生活',
+            'entertainment': '🎮 娱乐',
+            'news': '📰 新闻',
+            'question': '❓ 提问'
+        };
+        return categories[category] || categories['general'];
+    }
+
     render() {
         const welcomeCard = this.postsContainer.querySelector('.welcome-card');
         
@@ -318,8 +526,8 @@ class BBSForum {
             if (!welcomeCard) {
                 this.postsContainer.innerHTML = `
                     <div class="welcome-card">
-                        <h2>✨ 欢迎来到论坛体</h2>
-                        <p>模仿网络论坛（如贴吧、Reddit）的讨论形式来呈现内容</p>
+                        <h2>✨ 欢迎来到Reddit风格论坛</h2>
+                        <p>使用投票系统发现最好的内容</p>
                         <p>点击上方"新建帖子"按钮开始创建你的第一个帖子！</p>
                     </div>
                 `;
@@ -332,31 +540,46 @@ class BBSForum {
         }
 
         const userId = this.getUserId();
-        this.postsContainer.innerHTML = this.posts.map(post => {
-            const isLiked = post.likedBy.includes(userId);
+        const sortedPosts = this.getSortedPosts();
+        
+        this.postsContainer.innerHTML = sortedPosts.map(post => {
+            // Initialize vote arrays if they don't exist (for old posts)
+            if (!post.upvotedBy) post.upvotedBy = [];
+            if (!post.downvotedBy) post.downvotedBy = [];
+            if (!post.upvotes) post.upvotes = 0;
+            if (!post.downvotes) post.downvotes = 0;
+            
+            const hasUpvoted = post.upvotedBy.includes(userId);
+            const hasDownvoted = post.downvotedBy.includes(userId);
+            const score = post.upvotes - post.downvotes;
+            
             return `
                 <div class="post-card">
-                    <div class="post-header">
-                        <div>
-                            <h2 class="post-title">${this.escapeHtml(post.title)}</h2>
-                            <div class="post-meta">
-                                <span class="post-author">👤 ${this.escapeHtml(post.author)}</span>
-                                <span class="post-time">🕐 ${this.formatTime(post.time)}</span>
+                    <div class="post-vote-column">
+                        <button class="vote-btn upvote ${hasUpvoted ? 'active' : ''}" onclick="event.stopPropagation(); forum.upvotePost(${post.id})">⬆</button>
+                        <span class="vote-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}">${score}</span>
+                        <button class="vote-btn downvote ${hasDownvoted ? 'active' : ''}" onclick="event.stopPropagation(); forum.downvotePost(${post.id})">⬇</button>
+                    </div>
+                    <div class="post-main">
+                        <div class="post-header">
+                            <div>
+                                <div class="post-meta-top">
+                                    <span class="post-category">${this.getCategoryDisplay(post.category || 'general')}</span>
+                                    <span class="post-author">👤 ${this.escapeHtml(post.author)}</span>
+                                    <span class="post-time">🕐 ${this.formatTime(post.time)}</span>
+                                </div>
+                                <h2 class="post-title" onclick="forum.viewPost(${post.id})">${this.escapeHtml(post.title)}</h2>
+                            </div>
+                            <div class="post-actions">
+                                <button class="btn-action btn-delete" onclick="event.stopPropagation(); forum.deletePost(${post.id})" title="删除">🗑️</button>
                             </div>
                         </div>
-                        <div class="post-actions">
-                            <button class="btn-action btn-delete" onclick="event.stopPropagation(); forum.deletePost(${post.id})" title="删除">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="post-content" onclick="forum.viewPost(${post.id})">${this.escapeHtml(post.content)}</div>
-                    <div class="post-footer">
-                        <div class="post-stat ${isLiked ? 'liked' : ''}" onclick="event.stopPropagation(); forum.toggleLike(${post.id})">
-                            <span class="post-stat-icon">${isLiked ? '❤️' : '🤍'}</span>
-                            <span>${post.likes}</span>
-                        </div>
-                        <div class="post-stat" onclick="forum.viewPost(${post.id})">
-                            <span class="post-stat-icon">💬</span>
-                            <span>${post.replies.length}</span>
+                        <div class="post-content" onclick="forum.viewPost(${post.id})">${this.escapeHtml(post.content)}</div>
+                        <div class="post-footer">
+                            <div class="post-stat" onclick="forum.viewPost(${post.id})">
+                                <span class="post-stat-icon">💬</span>
+                                <span>${post.replies.length} 回复</span>
+                            </div>
                         </div>
                     </div>
                 </div>
