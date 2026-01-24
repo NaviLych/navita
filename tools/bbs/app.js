@@ -26,6 +26,7 @@ class BBSForum {
         this.inputAuthor = document.getElementById('inputAuthor');
         this.inputReply = document.getElementById('inputReply');
         this.inputReplyAuthor = document.getElementById('inputReplyAuthor');
+        this.inputIsOP = document.getElementById('inputIsOP');
 
         // Modals
         this.postModal = document.getElementById('postModal');
@@ -221,10 +222,11 @@ class BBSForum {
         const userId = this.getUserId();
         this.repliesList.innerHTML = post.replies.map((reply, index) => {
             const isLiked = reply.likedBy && reply.likedBy.includes(userId);
+            const opBadge = reply.isOP ? '<span class="op-badge">楼主</span>' : '';
             return `
                 <div class="reply-item">
                     <div class="reply-header">
-                        <span class="reply-author">${index + 1}楼 · ${this.escapeHtml(reply.author)}</span>
+                        <span class="reply-author">${index + 1}楼 · ${this.escapeHtml(reply.author)} ${opBadge}</span>
                         <span class="reply-time">${this.formatTime(reply.time)}</span>
                     </div>
                     <div class="reply-content">${this.escapeHtml(reply.content)}</div>
@@ -244,6 +246,7 @@ class BBSForum {
 
         const content = this.inputReply.value.trim();
         const author = this.inputReplyAuthor.value.trim() || '匿名网友';
+        const isOP = this.inputIsOP.checked;
 
         if (!content) {
             alert('请输入回复内容');
@@ -256,7 +259,8 @@ class BBSForum {
             author,
             time: new Date().toISOString(),
             likes: 0,
-            likedBy: []
+            likedBy: [],
+            isOP: isOP
         };
 
         const post = this.posts.find(p => p.id === this.currentPost.id);
@@ -267,6 +271,7 @@ class BBSForum {
             this.renderPostDetail(post);
             this.inputReply.value = '';
             this.inputReplyAuthor.value = '';
+            this.inputIsOP.checked = false;
         }
     }
 
