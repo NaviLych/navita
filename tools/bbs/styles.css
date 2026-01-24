@@ -567,6 +567,7 @@ body {
     font-size: 0.9rem;
 }
 
+/* Checkbox for marking OP replies - standard size for touch targets */
 .checkbox-isop {
     cursor: pointer;
     width: 16px;
@@ -641,6 +642,7 @@ body {
         flex-wrap: wrap;
     }
     
+    /* Mobile: author input needs minimum width for usability */
     .input-reply-author {
         flex: 1;
         min-width: 150px;

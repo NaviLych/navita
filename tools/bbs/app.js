@@ -222,6 +222,7 @@ class BBSForum {
         const userId = this.getUserId();
         this.repliesList.innerHTML = post.replies.map((reply, index) => {
             const isLiked = reply.likedBy && reply.likedBy.includes(userId);
+            // isOP is a boolean flag, not user input - safe to use in template
             const opBadge = reply.isOP ? '<span class="op-badge">楼主</span>' : '';
             return `
                 <div class="reply-item">
