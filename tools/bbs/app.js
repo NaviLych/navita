@@ -299,7 +299,7 @@ class BBSForum {
     getUserId() {
         let userId = localStorage.getItem('bbs-user-id');
         if (!userId) {
-            userId = 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            userId = 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 11);
             localStorage.setItem('bbs-user-id', userId);
         }
         return userId;
