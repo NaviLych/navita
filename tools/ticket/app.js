@@ -1,3 +1,12 @@
+// Default project
+const DEFAULT_PROJECT = {
+    id: 1,
+    name: '日常事务',
+    color: '#86868b',
+    isDefault: true,
+    createdAt: '2020-01-01T00:00:00.000Z'
+};
+
 // State management
 let todos = [];
 let projects = [];
@@ -14,6 +23,16 @@ try {
     completedRecords = [];
 }
 
+// Ensure default project exists
+function ensureDefaultProject() {
+    const hasDefault = projects.some(p => p.isDefault);
+    if (!hasDefault) {
+        projects.unshift({ ...DEFAULT_PROJECT });
+        localStorage.setItem('projects', JSON.stringify(projects));
+    }
+}
+ensureDefaultProject();
+
 const state = {
     theme: localStorage.getItem('theme') || 'light',
     todos: todos,
@@ -26,7 +45,7 @@ const state = {
     lastSaveTime: 0,
     currentPeriod: 'today',
     selectedProjectColor: '#ff6b35',
-    selectedProjectId: null
+    selectedProjectId: DEFAULT_PROJECT.id
 };
 
 // DOM elements
@@ -209,13 +228,19 @@ function createProject() {
 }
 
 function deleteProject(id) {
+    const project = state.projects.find(p => p.id === id);
+    if (project && project.isDefault) {
+        alert('默认项目不可删除');
+        return;
+    }
+    
     if (!confirm('确定要删除这个项目吗？相关任务不会被删除。')) return;
     
     state.projects = state.projects.filter(p => p.id !== id);
     
-    // 如果删除的是当前选中的项目，重置选择
+    // 如果删除的是当前选中的项目，重置为默认项目
     if (state.selectedProjectId === id) {
-        state.selectedProjectId = null;
+        state.selectedProjectId = DEFAULT_PROJECT.id;
     }
     
     saveProjects();
@@ -230,20 +255,17 @@ function saveProjects() {
 function renderProjectTags() {
     const container = elements.projectTags;
     
-    // 保留无项目选项
-    let html = `
-        <button class="project-tag ${state.selectedProjectId === null ? 'active' : ''}" data-id="">
-            <span class="tag-dot" style="background: var(--text-tertiary)"></span>
-            <span>无项目</span>
-        </button>
-    `;
+    let html = '';
     
-    // 添加项目标签
+    // 添加项目标签（默认项目在前）
     state.projects.forEach(project => {
+        const isActive = state.selectedProjectId === project.id;
+        const defaultBadge = project.isDefault ? '<span class="default-badge">默认</span>' : '';
         html += `
-            <button class="project-tag ${state.selectedProjectId === project.id ? 'active' : ''}" data-id="${project.id}">
+            <button class="project-tag ${isActive ? 'active' : ''}" data-id="${project.id}">
                 <span class="tag-dot" style="background: ${project.color}"></span>
                 <span>${escapeHtml(project.name)}</span>
+                ${defaultBadge}
             </button>
         `;
     });
@@ -262,7 +284,7 @@ function renderProjectTags() {
         tag.addEventListener('click', () => {
             container.querySelectorAll('.project-tag').forEach(t => t.classList.remove('active'));
             tag.classList.add('active');
-            state.selectedProjectId = tag.dataset.id ? parseInt(tag.dataset.id) : null;
+            state.selectedProjectId = parseInt(tag.dataset.id);
         });
     });
     
@@ -285,17 +307,21 @@ function renderProjects() {
     elements.projectsList.innerHTML = state.projects.map(project => {
         const projectTime = getProjectTotalTime(project.id);
         const taskCount = getProjectTaskCount(project.id);
+        const deleteBtn = project.isDefault ? '' : `
+            <button class="project-delete" onclick="deleteProject(${project.id})">
+                <span class="delete-icon"></span>
+            </button>
+        `;
+        const defaultBadge = project.isDefault ? '<span class="project-default-badge">默认</span>' : '';
         return `
             <div class="project-item">
                 <div class="project-color" style="background: ${project.color}"></div>
                 <div class="project-info">
-                    <div class="project-name">${escapeHtml(project.name)}</div>
+                    <div class="project-name">${escapeHtml(project.name)} ${defaultBadge}</div>
                     <div class="project-stats">${taskCount} 个任务</div>
                 </div>
                 <div class="project-time">${formatTimeShort(projectTime)}</div>
-                <button class="project-delete" onclick="deleteProject(${project.id})">
-                    <span class="delete-icon"></span>
-                </button>
+                ${deleteBtn}
             </div>
         `;
     }).join('');
