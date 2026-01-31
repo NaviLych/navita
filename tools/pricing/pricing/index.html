@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Black-Scholes 定价 - 期权定价教程</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <header class="page-header">
+    <a href="../">←</a>
+    <h1>🧮 Black-Scholes 定价</h1>
+  </header>
+
+  <div class="page-container">
+    <section class="knowledge">
+      <h2>为什么需要定价模型？</h2>
+      <p>期权的权利金不仅取决于当前价格与执行价，还受到<b>波动率、时间、利率</b>影响。Black-Scholes（BS）模型用数学公式给出理论价格。</p>
+
+      <h2>BS 模型的 5 个输入</h2>
+      <ul>
+        <li><b>S</b> — 当前标的价格</li>
+        <li><b>K</b> — 执行价</li>
+        <li><b>σ (sigma)</b> — 年化波动率</li>
+        <li><b>r</b> — 无风险利率（年化）</li>
+        <li><b>T</b> — 剩余到期时间（年）</li>
+      </ul>
+
+      <div class="highlight">
+        <strong>直觉</strong><br>
+        波动率 σ 越高 → 期权越贵（更大概率触及行权价）<br>
+        到期时间 T 越长 → 时间价值越高<br>
+        利率 r 上升 → Call 略贵，Put 略便宜
+      </div>
+
+      <h2>公式速览（无需死记）</h2>
+      <p>Call = S·N(d₁) − K·e<sup>−rT</sup>·N(d₂)</p>
+      <p>Put = K·e<sup>−rT</sup>·N(−d₂) − S·N(−d₁)</p>
+      <p>其中 d₁、d₂ 由 S、K、σ、r、T 计算得出，N(·) 为标准正态 CDF。</p>
+
+      <p>👉 在右侧模拟器调整参数，实时观察理论价格的变化。</p>
+    </section>
+
+    <aside class="sim-panel">
+      <div class="sim-toggle">模拟器</div>
+      <div class="sim-body">
+        <div class="field"><label>标的价格 S</label><input id="S" type="number" value="100" step="1"></div>
+        <div class="field"><label>执行价 K</label><input id="K" type="number" value="100" step="1"></div>
+        <div class="field"><label>波动率 σ</label><input id="sigma" type="number" value="0.2" step="0.01"></div>
+        <div class="field"><label>无风险利率 r</label><input id="r" type="number" value="0.03" step="0.005"></div>
+        <div class="field"><label>到期时间 T (年)</label><input id="T" type="number" value="0.5" step="0.05"></div>
+        <div class="field"><label>类型</label>
+          <select id="type"><option value="call">Call</option><option value="put">Put</option></select>
+        </div>
+        <button class="btn" id="calc">计算理论价格</button>
+        <div class="result-box" id="result">
+          <p><b>理论价格:</b> <span id="price">-</span></p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer><small><a href="../">← 返回首页</a></small></footer>
+  <script src="../shared/common.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
