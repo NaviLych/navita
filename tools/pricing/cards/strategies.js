@@ -1,11 +1,12 @@
-// ===== 卡片模块：策略 (卡片 12) =====
+// ===== 卡片模块：策略 =====
 
 const StrategyCards = {
-  // 卡片12: 组合策略
+  // 组合策略
   strategies: {
     theme: 'orange',
     badge: '策略',
     title: '组合策略一览',
+    chapter: '交易策略',
     render: () => `
       <div class="strategy-grid">
         <div class="strat-card" data-strat="bullSpread">

@@ -6,6 +6,7 @@ const PremiumCards = {
     theme: 'orange',
     badge: '互动',
     title: '权利金 = 期权的价格',
+    chapter: '权利金与盈亏',
     render: () => `
       <p>买期权要付钱，这笔钱叫<strong>权利金 (Premium)</strong></p>
       <div class="interactive-box">
@@ -39,6 +40,7 @@ const PremiumCards = {
     theme: 'blue',
     badge: '核心',
     title: '到期时你赚多少？',
+    chapter: '权利金与盈亏',
     render: () => `
       <p>假设你买了一个执行价 100 的 <b>Call</b>，付了 5 元权利金</p>
       <div class="interactive-box">

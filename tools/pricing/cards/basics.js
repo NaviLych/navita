@@ -7,6 +7,7 @@ const BasicsCards = {
     theme: 'blue',
     badge: '基础',
     title: '什么是期权？',
+    chapter: '基础入门',
     render: () => `
       <p class="big-text">一份<em>合同</em>，让你有权在未来以<strong>约定价格</strong>买/卖某资产</p>
       <div class="example-box">
@@ -27,6 +28,7 @@ const BasicsCards = {
     theme: 'green',
     badge: '基础',
     title: 'Call 看涨 vs Put 看跌',
+    chapter: '基础入门',
     render: () => `
       <div class="two-col">
         <div class="col">
@@ -55,6 +57,7 @@ const BasicsCards = {
     theme: 'purple',
     badge: '基础',
     title: '多头 vs 空头',
+    chapter: '基础入门',
     render: () => `
       <div class="two-col">
         <div class="col">
@@ -73,6 +76,52 @@ const BasicsCards = {
       <div class="example-box">
         <p>🛒 买家（多头）：付 5 元权利金，赌对了能赚很多<br>
            🏪 卖家（空头）：收 5 元权利金，大概率白赚，但有爆仓风险</p>
+      </div>
+    `,
+    init: () => {}
+  },
+
+  // 新增卡片: 期权术语
+  terminology: {
+    theme: 'blue',
+    badge: '基础',
+    title: '期权常用术语',
+    chapter: '基础入门',
+    render: () => `
+      <table class="compare-table">
+        <tr>
+          <th>术语</th>
+          <th>含义</th>
+          <th>举例</th>
+        </tr>
+        <tr>
+          <td><b>ITM</b></td>
+          <td>实值 (In The Money)</td>
+          <td>Call: S>K</td>
+        </tr>
+        <tr>
+          <td><b>ATM</b></td>
+          <td>平值 (At The Money)</td>
+          <td>S ≈ K</td>
+        </tr>
+        <tr>
+          <td><b>OTM</b></td>
+          <td>虚值 (Out of The Money)</td>
+          <td>Call: S<K</td>
+        </tr>
+        <tr>
+          <td><b>行权</b></td>
+          <td>Exercise</td>
+          <td>使用期权权利</td>
+        </tr>
+        <tr>
+          <td><b>到期日</b></td>
+          <td>Expiration</td>
+          <td>合约失效日期</td>
+        </tr>
+      </table>
+      <div class="example-box">
+        <p>💡 <b>虚值期权更便宜</b>，但到期归零概率更高！</p>
       </div>
     `,
     init: () => {}
