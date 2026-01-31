@@ -54,21 +54,29 @@
 
         <!-- Floating Add Button -->
         <div class="fab-container">
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    id="todoInput" 
-                    class="todo-input" 
-                    placeholder="输入任务名称..."
-                    autocomplete="off"
-                />
-                <select id="projectSelect" class="project-select">
-                    <option value="">选择项目</option>
-                </select>
+            <div class="input-wrapper">
+                <div class="project-tags-wrapper">
+                    <div class="project-tags" id="projectTags">
+                        <button class="project-tag active" data-id="">
+                            <span class="tag-dot" style="background: var(--text-tertiary)"></span>
+                            <span>无项目</span>
+                        </button>
+                        <!-- Project tags will be inserted here -->
+                    </div>
+                </div>
+                <div class="input-row">
+                    <input 
+                        type="text" 
+                        id="todoInput" 
+                        class="todo-input" 
+                        placeholder="输入任务名称..."
+                        autocomplete="off"
+                    />
+                    <button class="fab" id="addBtn" aria-label="添加任务">
+                        <span class="fab-icon"></span>
+                    </button>
+                </div>
             </div>
-            <button class="fab" id="addBtn" aria-label="添加任务">
-                <span class="fab-icon"></span>
-            </button>
         </div>
     </div>
 

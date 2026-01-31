@@ -25,7 +25,8 @@ const state = {
     timerInterval: null,
     lastSaveTime: 0,
     currentPeriod: 'today',
-    selectedProjectColor: '#ff6b35'
+    selectedProjectColor: '#ff6b35',
+    selectedProjectId: null
 };
 
 // DOM elements
@@ -36,7 +37,7 @@ const elements = {
     // List view
     listView: document.getElementById('listView'),
     todoInput: document.getElementById('todoInput'),
-    projectSelect: document.getElementById('projectSelect'),
+    projectTags: document.getElementById('projectTags'),
     addBtn: document.getElementById('addBtn'),
     todoList: document.getElementById('todoList'),
     emptyState: document.getElementById('emptyState'),
@@ -138,7 +139,7 @@ function init() {
     });
 
     // Initial renders
-    renderProjectSelect();
+    renderProjectTags();
     renderTodos();
     renderProjects();
     renderRecords();
@@ -199,7 +200,11 @@ function createProject() {
     state.projects.push(project);
     saveProjects();
     renderProjects();
-    renderProjectSelect();
+    renderProjectTags();
+    
+    // 自动选择新创建的项目
+    state.selectedProjectId = project.id;
+    
     closeProjectModal();
 }
 
@@ -207,24 +212,65 @@ function deleteProject(id) {
     if (!confirm('确定要删除这个项目吗？相关任务不会被删除。')) return;
     
     state.projects = state.projects.filter(p => p.id !== id);
+    
+    // 如果删除的是当前选中的项目，重置选择
+    if (state.selectedProjectId === id) {
+        state.selectedProjectId = null;
+    }
+    
     saveProjects();
     renderProjects();
-    renderProjectSelect();
+    renderProjectTags();
 }
 
 function saveProjects() {
     localStorage.setItem('projects', JSON.stringify(state.projects));
 }
 
-function renderProjectSelect() {
-    const select = elements.projectSelect;
-    select.innerHTML = '<option value="">选择项目</option>';
+function renderProjectTags() {
+    const container = elements.projectTags;
+    
+    // 保留无项目选项
+    let html = `
+        <button class="project-tag ${state.selectedProjectId === null ? 'active' : ''}" data-id="">
+            <span class="tag-dot" style="background: var(--text-tertiary)"></span>
+            <span>无项目</span>
+        </button>
+    `;
+    
+    // 添加项目标签
     state.projects.forEach(project => {
-        const option = document.createElement('option');
-        option.value = project.id;
-        option.textContent = project.name;
-        select.appendChild(option);
+        html += `
+            <button class="project-tag ${state.selectedProjectId === project.id ? 'active' : ''}" data-id="${project.id}">
+                <span class="tag-dot" style="background: ${project.color}"></span>
+                <span>${escapeHtml(project.name)}</span>
+            </button>
+        `;
     });
+    
+    // 添加新建项目按钮
+    html += `
+        <button class="project-tag project-tag-add" id="quickAddProject">
+            <span>+ 新建</span>
+        </button>
+    `;
+    
+    container.innerHTML = html;
+    
+    // 绑定点击事件
+    container.querySelectorAll('.project-tag:not(.project-tag-add)').forEach(tag => {
+        tag.addEventListener('click', () => {
+            container.querySelectorAll('.project-tag').forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+            state.selectedProjectId = tag.dataset.id ? parseInt(tag.dataset.id) : null;
+        });
+    });
+    
+    // 快速新建项目
+    const quickAddBtn = container.querySelector('#quickAddProject');
+    if (quickAddBtn) {
+        quickAddBtn.addEventListener('click', openProjectModal);
+    }
 }
 
 function renderProjects() {
@@ -270,12 +316,10 @@ function addTodo() {
     const text = elements.todoInput.value.trim();
     if (!text) return;
 
-    const projectId = elements.projectSelect.value ? parseInt(elements.projectSelect.value) : null;
-    
     const todo = {
         id: Date.now() + Math.random(),
         name: text,
-        projectId: projectId,
+        projectId: state.selectedProjectId,
         createdAt: new Date().toISOString(),
         totalTime: 0,
         sessions: 0
