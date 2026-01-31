@@ -2,9 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a1a1a">
-    <title>小票计时</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f5f7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>叫号专注</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,26 +14,17 @@
     <div class="view" id="listView">
         <!-- Header -->
         <header class="header">
-            <h1 class="title">待办小票</h1>
-            <div class="header-controls">
-                <button class="icon-btn" id="themeToggle" title="切换主题" aria-label="切换深色模式">🌙</button>
+            <div class="header-content">
+                <h1 class="title">待办</h1>
+                <p class="subtitle" id="todoCount">0 个任务</p>
             </div>
+            <button class="theme-btn" id="themeToggle" aria-label="切换主题">
+                <span class="theme-icon"></span>
+            </button>
         </header>
 
         <!-- Main Content -->
         <main class="container">
-            <!-- Add Todo Form -->
-            <div class="add-todo-container">
-                <input 
-                    type="text" 
-                    id="todoInput" 
-                    class="todo-input" 
-                    placeholder="添加新待办..."
-                    autocomplete="off"
-                />
-                <button class="add-btn" id="addBtn" title="添加待办" aria-label="添加新待办">➕</button>
-            </div>
-
             <!-- Todo List -->
             <div class="todo-list" id="todoList">
                 <!-- Todos will be inserted here dynamically -->
@@ -39,59 +32,116 @@
 
             <!-- Empty State -->
             <div class="empty-state" id="emptyState">
-                <div class="empty-icon">📋</div>
-                <div class="empty-text">暂无待办事项</div>
-                <div class="empty-hint">添加待办开始计时</div>
+                <div class="empty-illustration">
+                    <div class="empty-ticket"></div>
+                </div>
+                <div class="empty-text">暂无待办</div>
+                <div class="empty-hint">点击下方添加您的第一个任务</div>
             </div>
         </main>
+
+        <!-- Floating Add Button -->
+        <div class="fab-container">
+            <input 
+                type="text" 
+                id="todoInput" 
+                class="todo-input" 
+                placeholder="输入任务名称..."
+                autocomplete="off"
+            />
+            <button class="fab" id="addBtn" aria-label="添加任务">
+                <span class="fab-icon"></span>
+            </button>
+        </div>
     </div>
 
     <!-- Focus/Timer View -->
     <div class="view hidden" id="focusView">
         <header class="focus-header">
-            <button class="back-btn" id="backBtn" title="返回" aria-label="返回列表">←</button>
-            <button class="icon-btn" id="themeToggleFocus" title="切换主题" aria-label="切换深色模式">🌙</button>
+            <button class="back-btn" id="backBtn" aria-label="返回">
+                <span class="back-icon"></span>
+                <span class="back-text">返回</span>
+            </button>
+            <button class="theme-btn" id="themeToggleFocus" aria-label="切换主题">
+                <span class="theme-icon"></span>
+            </button>
         </header>
 
         <!-- Bank Ticket Style Display -->
         <div class="ticket-container">
             <div class="ticket">
-                <div class="ticket-header">
-                    <div class="ticket-brand">专注计时</div>
-                    <div class="ticket-date" id="ticketDate"></div>
-                </div>
+                <!-- Ticket Top Decoration -->
+                <div class="ticket-top-edge"></div>
                 
-                <div class="ticket-number-section">
-                    <div class="ticket-label">您的号码</div>
-                    <div class="ticket-number" id="ticketNumber">A001</div>
+                <div class="ticket-inner">
+                    <!-- Bank Logo Style Header -->
+                    <div class="ticket-brand-section">
+                        <div class="ticket-logo">
+                            <span class="logo-icon">⏱</span>
+                        </div>
+                        <div class="ticket-brand">专注银行</div>
+                        <div class="ticket-branch">时间管理中心</div>
+                    </div>
+
+                    <!-- Ticket Number Section - Main Focus -->
+                    <div class="ticket-number-section">
+                        <div class="ticket-label">请保管好您的号码</div>
+                        <div class="ticket-number-wrapper">
+                            <div class="ticket-number" id="ticketNumber">A001</div>
+                        </div>
+                        <div class="ticket-date" id="ticketDate"></div>
+                    </div>
+
+                    <!-- Divider with perforation effect -->
+                    <div class="ticket-perforation"></div>
+
+                    <!-- Task Info Section -->
+                    <div class="ticket-task-section">
+                        <div class="task-label">业务类型</div>
+                        <div class="task-name" id="ticketTaskName">任务名称</div>
+                    </div>
+
+                    <!-- Timer Section -->
+                    <div class="timer-section">
+                        <div class="timer-ring">
+                            <svg class="timer-svg" viewBox="0 0 200 200">
+                                <circle class="timer-bg" cx="100" cy="100" r="90"/>
+                                <circle class="timer-progress" cx="100" cy="100" r="90" id="timerProgress"/>
+                            </svg>
+                            <div class="timer-content">
+                                <div class="timer-display" id="timerDisplay">00:00</div>
+                                <div class="timer-label">已等候</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="timer-controls">
+                        <button class="control-btn start-btn" id="startBtn">
+                            <span class="btn-icon play-icon"></span>
+                            <span class="btn-text">开始</span>
+                        </button>
+                        <button class="control-btn pause-btn hidden" id="pauseBtn">
+                            <span class="btn-icon pause-icon"></span>
+                            <span class="btn-text">暂停</span>
+                        </button>
+                        <button class="control-btn reset-btn" id="resetBtn">
+                            <span class="btn-icon reset-icon"></span>
+                            <span class="btn-text">重置</span>
+                        </button>
+                    </div>
+
+                    <!-- Completion Section -->
+                    <div class="completion-section hidden" id="completionSection">
+                        <button class="complete-btn" id="completeBtn">
+                            <span class="complete-icon"></span>
+                            <span>完成任务</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="ticket-task-section">
-                    <div class="ticket-task-label">当前任务</div>
-                    <div class="ticket-task-name" id="ticketTaskName">任务名称</div>
-                </div>
-
-                <div class="ticket-divider"></div>
-
-                <div class="timer-section">
-                    <div class="timer-display" id="timerDisplay">00:00:00</div>
-                    <div class="timer-label">已专注时长</div>
-                </div>
-
-                <div class="timer-controls">
-                    <button class="control-btn start-btn" id="startBtn" aria-label="开始计时">开始</button>
-                    <button class="control-btn pause-btn hidden" id="pauseBtn" aria-label="暂停计时">暂停</button>
-                    <button class="control-btn reset-btn" id="resetBtn" aria-label="重置计时器">重置</button>
-                </div>
-
-                <div class="completion-section hidden" id="completionSection">
-                    <div class="completion-message">任务完成了吗？</div>
-                    <button class="control-btn complete-btn" id="completeBtn" aria-label="完成任务">✓ 标记为已完成</button>
-                </div>
-
-                <div class="ticket-footer">
-                    <div class="ticket-tip">保持专注，完成目标 ✨</div>
-                </div>
+                <!-- Ticket Bottom Decoration -->
+                <div class="ticket-bottom-edge"></div>
             </div>
         </div>
     </div>

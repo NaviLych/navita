@@ -26,6 +26,7 @@ const elements = {
     todoList: document.getElementById('todoList'),
     emptyState: document.getElementById('emptyState'),
     themeToggle: document.getElementById('themeToggle'),
+    todoCount: document.getElementById('todoCount'),
     
     // Focus view
     focusView: document.getElementById('focusView'),
@@ -34,6 +35,7 @@ const elements = {
     ticketNumber: document.getElementById('ticketNumber'),
     ticketTaskName: document.getElementById('ticketTaskName'),
     timerDisplay: document.getElementById('timerDisplay'),
+    timerProgress: document.getElementById('timerProgress'),
     startBtn: document.getElementById('startBtn'),
     pauseBtn: document.getElementById('pauseBtn'),
     resetBtn: document.getElementById('resetBtn'),
@@ -76,9 +78,7 @@ function toggleTheme() {
 }
 
 function updateThemeIcon() {
-    const icon = state.theme === 'light' ? '🌙' : '☀️';
-    elements.themeToggle.textContent = icon;
-    elements.themeToggleFocus.textContent = icon;
+    // Icons are handled via CSS mask-image based on data-theme
 }
 
 // Todo management
@@ -98,11 +98,11 @@ function addTodo() {
     renderTodos();
     
     elements.todoInput.value = '';
-    elements.todoInput.focus();
+    elements.todoInput.blur();
 }
 
 function deleteTodo(id) {
-    if (confirm('确定要删除这个待办吗？')) {
+    if (confirm('确定要删除这个任务吗？')) {
         state.todos = state.todos.filter(todo => todo.id !== id);
         saveTodos();
         renderTodos();
@@ -123,6 +123,7 @@ function startFocus(id) {
     // Load saved time
     state.timerSeconds = todo.totalTime || 0;
     updateTimerDisplay();
+    updateTimerProgress();
     
     // Switch to focus view
     elements.listView.classList.add('hidden');
@@ -150,7 +151,11 @@ function saveTodos() {
 }
 
 function renderTodos() {
-    if (state.todos.length === 0) {
+    // Update count
+    const count = state.todos.length;
+    elements.todoCount.textContent = `${count} 个任务`;
+    
+    if (count === 0) {
         elements.emptyState.classList.add('visible');
         elements.todoList.innerHTML = '';
         return;
@@ -160,13 +165,25 @@ function renderTodos() {
     
     elements.todoList.innerHTML = state.todos.map(todo => `
         <div class="todo-item">
+            <div class="todo-ticket-icon">
+                <span>🎫</span>
+            </div>
             <div class="todo-content">
                 <div class="todo-name">${escapeHtml(todo.name)}</div>
-                <div class="todo-time">已专注 ${formatTime(todo.totalTime || 0)}</div>
+                <div class="todo-meta">
+                    <span class="todo-time-badge">
+                        <span>⏱</span>
+                        <span>${formatTimeShort(todo.totalTime || 0)}</span>
+                    </span>
+                </div>
             </div>
             <div class="todo-actions">
-                <button class="action-btn" onclick="startFocus(${todo.id})">取号</button>
-                <button class="action-btn delete-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+                <button class="take-btn" onclick="startFocus(${todo.id})">
+                    <span>取号</span>
+                </button>
+                <button class="delete-btn" onclick="deleteTodo(${todo.id})">
+                    <span class="delete-icon"></span>
+                </button>
             </div>
         </div>
     `).join('');
@@ -186,6 +203,7 @@ function startTimer() {
     state.timerInterval = setInterval(() => {
         state.timerSeconds++;
         updateTimerDisplay();
+        updateTimerProgress();
         // Throttle localStorage writes to every 10 seconds
         const now = Date.now();
         if (now - state.lastSaveTime >= 10000) {
@@ -282,8 +300,26 @@ function updateTimerDisplay() {
     const minutes = Math.floor((state.timerSeconds % 3600) / 60);
     const seconds = state.timerSeconds % 60;
     
-    elements.timerDisplay.textContent = 
-        `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+    // Show hours only if > 0
+    if (hours > 0) {
+        elements.timerDisplay.textContent = 
+            `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+    } else {
+        elements.timerDisplay.textContent = 
+            `${padZero(minutes)}:${padZero(seconds)}`;
+    }
+}
+
+function updateTimerProgress() {
+    // Progress based on 60-minute cycle (Pomodoro-like)
+    const cycleSeconds = 60 * 60; // 1 hour cycle
+    const progress = (state.timerSeconds % cycleSeconds) / cycleSeconds;
+    const circumference = 2 * Math.PI * 90; // r=90 from SVG
+    const offset = circumference * (1 - progress);
+    
+    if (elements.timerProgress) {
+        elements.timerProgress.style.strokeDashoffset = offset;
+    }
 }
 
 // Utility functions
@@ -302,7 +338,7 @@ function formatDate(date) {
     const day = padZero(date.getDate());
     const hours = padZero(date.getHours());
     const minutes = padZero(date.getMinutes());
-    return `${year}/${month}/${day} ${hours}:${minutes}`;
+    return `${year}年${month}月${day}日 ${hours}:${minutes}`;
 }
 
 function formatTime(seconds) {
@@ -315,6 +351,18 @@ function formatTime(seconds) {
         return `${hours}小时${minutes}分钟`;
     }
     return `${minutes}分钟`;
+}
+
+function formatTimeShort(seconds) {
+    if (seconds === 0) return '0分';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (hours > 0) {
+        return `${hours}时${minutes}分`;
+    }
+    return `${minutes}分`;
 }
 
 function padZero(num) {
