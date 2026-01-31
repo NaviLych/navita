@@ -10,6 +10,18 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Tab Bar Navigation -->
+    <nav class="tab-bar" id="tabBar">
+        <button class="tab-item active" data-view="listView">
+            <span class="tab-icon todo-icon"></span>
+            <span class="tab-label">待办</span>
+        </button>
+        <button class="tab-item" data-view="accountView">
+            <span class="tab-icon account-icon"></span>
+            <span class="tab-label">账户</span>
+        </button>
+    </nav>
+
     <!-- Todo List View -->
     <div class="view" id="listView">
         <!-- Header -->
@@ -42,17 +54,128 @@
 
         <!-- Floating Add Button -->
         <div class="fab-container">
-            <input 
-                type="text" 
-                id="todoInput" 
-                class="todo-input" 
-                placeholder="输入任务名称..."
-                autocomplete="off"
-            />
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="todoInput" 
+                    class="todo-input" 
+                    placeholder="输入任务名称..."
+                    autocomplete="off"
+                />
+                <select id="projectSelect" class="project-select">
+                    <option value="">选择项目</option>
+                </select>
+            </div>
             <button class="fab" id="addBtn" aria-label="添加任务">
                 <span class="fab-icon"></span>
             </button>
         </div>
+    </div>
+
+    <!-- Account/Stats View -->
+    <div class="view hidden" id="accountView">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">账户</h1>
+                <p class="subtitle">专注收益总览</p>
+            </div>
+            <button class="theme-btn" id="themeToggleAccount" aria-label="切换主题">
+                <span class="theme-icon"></span>
+            </button>
+        </header>
+
+        <main class="container account-container">
+            <!-- Account Card -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-logo">
+                        <span>💰</span>
+                    </div>
+                    <div class="account-info">
+                        <div class="account-name">专注银行</div>
+                        <div class="account-number">时间储蓄账户</div>
+                    </div>
+                </div>
+                <div class="account-balance">
+                    <div class="balance-label">总专注时长</div>
+                    <div class="balance-value" id="totalBalance">0小时0分</div>
+                </div>
+                <div class="account-meta">
+                    <span id="completedCount">已完成 0 项任务</span>
+                </div>
+            </div>
+
+            <!-- Period Stats -->
+            <div class="stats-section">
+                <div class="section-header">
+                    <h2 class="section-title">收益明细</h2>
+                </div>
+                <div class="period-tabs">
+                    <button class="period-tab active" data-period="today">今日</button>
+                    <button class="period-tab" data-period="week">本周</button>
+                    <button class="period-tab" data-period="month">本月</button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon time-icon">⏱</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="periodTime">0分</div>
+                            <div class="stat-label">专注时长</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon task-icon">✓</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="periodTasks">0</div>
+                            <div class="stat-label">完成任务</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon avg-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="periodAvg">0分</div>
+                            <div class="stat-label">平均时长</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon streak-icon">🔥</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="periodSessions">0</div>
+                            <div class="stat-label">专注次数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Section -->
+            <div class="projects-section">
+                <div class="section-header">
+                    <h2 class="section-title">项目账户</h2>
+                    <button class="add-project-btn" id="addProjectBtn">
+                        <span>+</span>
+                    </button>
+                </div>
+                <div class="projects-list" id="projectsList">
+                    <!-- Projects will be inserted here dynamically -->
+                </div>
+                <div class="empty-projects" id="emptyProjects">
+                    <p>暂无项目，点击右上角添加</p>
+                </div>
+            </div>
+
+            <!-- Recent Records -->
+            <div class="records-section">
+                <div class="section-header">
+                    <h2 class="section-title">交易记录</h2>
+                </div>
+                <div class="records-list" id="recordsList">
+                    <!-- Records will be inserted here dynamically -->
+                </div>
+                <div class="empty-records" id="emptyRecords">
+                    <p>暂无完成记录</p>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Focus/Timer View -->
@@ -80,7 +203,7 @@
                             <span class="logo-icon">⏱</span>
                         </div>
                         <div class="ticket-brand">专注银行</div>
-                        <div class="ticket-branch">时间管理中心</div>
+                        <div class="ticket-branch" id="ticketBranch">时间管理中心</div>
                     </div>
 
                     <!-- Ticket Number Section - Main Focus -->
@@ -142,6 +265,41 @@
 
                 <!-- Ticket Bottom Decoration -->
                 <div class="ticket-bottom-edge"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div class="modal hidden" id="projectModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建项目</h3>
+                <button class="modal-close" id="closeProjectModal">×</button>
+            </div>
+            <div class="modal-body">
+                <input 
+                    type="text" 
+                    id="projectNameInput" 
+                    class="modal-input" 
+                    placeholder="输入项目名称..."
+                    autocomplete="off"
+                />
+                <div class="color-picker">
+                    <label>选择颜色</label>
+                    <div class="color-options" id="colorOptions">
+                        <button class="color-option active" data-color="#ff6b35" style="background:#ff6b35"></button>
+                        <button class="color-option" data-color="#007aff" style="background:#007aff"></button>
+                        <button class="color-option" data-color="#34c759" style="background:#34c759"></button>
+                        <button class="color-option" data-color="#ff9500" style="background:#ff9500"></button>
+                        <button class="color-option" data-color="#af52de" style="background:#af52de"></button>
+                        <button class="color-option" data-color="#ff2d55" style="background:#ff2d55"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel-btn" id="cancelProject">取消</button>
+                <button class="modal-btn confirm-btn" id="confirmProject">创建</button>
             </div>
         </div>
     </div>
