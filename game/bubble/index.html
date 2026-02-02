@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>解压泡泡纸 💭</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>💭 解压泡泡纸</h1>
+            <div class="stats">
+                <span class="pop-count">已戳: <span id="popCount">0</span> 个</span>
+                <span class="combo-display" id="comboDisplay"></span>
+            </div>
+            <div class="controls">
+                <button id="resetBtn" class="reset-btn">🔄 重置</button>
+                <button id="soundToggle" class="sound-btn">🔊 音效</button>
+                <button id="modeToggle" class="mode-btn">🎯 普通模式</button>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="bubble-wrap" id="bubbleWrap"></div>
+        </div>
+        
+        <div class="size-selector">
+            <span>泡泡大小:</span>
+            <button class="size-btn" data-size="small">小</button>
+            <button class="size-btn active" data-size="medium">中</button>
+            <button class="size-btn" data-size="large">大</button>
+        </div>
+        
+        <div class="instructions">
+            <p>💡 点击泡泡来解压！连续点击有连击加成~</p>
+        </div>
+    </div>
+    
+    <div class="pop-effects" id="popEffects"></div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

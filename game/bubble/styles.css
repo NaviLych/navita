@@ -1,0 +1,484 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+    height: 100vh;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.header h1 {
+    color: white;
+    font-size: 1.8rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.pop-count {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    color: #555;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#popCount {
+    font-weight: bold;
+    color: #764ba2;
+}
+
+.combo-display {
+    background: linear-gradient(135deg, #ff6b6b, #feca57);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 1rem;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.combo-display.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reset-btn {
+    background: linear-gradient(135deg, #81c784, #4caf50);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.reset-btn:active {
+    transform: scale(0.95);
+}
+
+.sound-btn {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
+    transition: all 0.3s ease;
+}
+
+.sound-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4);
+}
+
+.sound-btn:active {
+    transform: scale(0.95);
+}
+
+.sound-btn.muted {
+    background: linear-gradient(135deg, #b2bec3, #636e72);
+}
+
+.mode-btn {
+    background: linear-gradient(135deg, #fd79a8, #e84393);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(232, 67, 147, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(232, 67, 147, 0.4);
+}
+
+.mode-btn:active {
+    transform: scale(0.95);
+}
+
+.mode-btn.zen {
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+}
+
+.game-area {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.bubble-wrap {
+    display: grid;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.bubble-wrap.small {
+    grid-template-columns: repeat(10, 1fr);
+}
+
+.bubble-wrap.medium {
+    grid-template-columns: repeat(8, 1fr);
+}
+
+.bubble-wrap.large {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.bubble {
+    width: var(--bubble-size);
+    height: var(--bubble-size);
+    background: radial-gradient(circle at 30% 30%, 
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.6) 20%,
+        rgba(200, 220, 255, 0.5) 40%,
+        rgba(180, 200, 240, 0.4) 60%,
+        rgba(160, 180, 220, 0.3) 80%,
+        rgba(140, 160, 200, 0.2) 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.1),
+        inset 0 2px 6px rgba(255, 255, 255, 0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+.bubble::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 25%;
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.bubble::after {
+    content: '';
+    position: absolute;
+    top: 25%;
+    right: 20%;
+    width: 15%;
+    height: 12%;
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.7) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.bubble:hover:not(.popped) {
+    transform: scale(1.1);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.1),
+        inset 0 2px 6px rgba(255, 255, 255, 0.8);
+}
+
+.bubble:active:not(.popped) {
+    transform: scale(0.9);
+}
+
+.bubble.popped {
+    background: radial-gradient(circle at 50% 50%,
+        rgba(200, 200, 200, 0.3) 0%,
+        rgba(180, 180, 180, 0.2) 50%,
+        rgba(160, 160, 160, 0.1) 100%);
+    box-shadow: 
+        inset 0 2px 8px rgba(0, 0, 0, 0.2),
+        inset 0 -1px 4px rgba(255, 255, 255, 0.1);
+    cursor: default;
+    transform: scale(0.85);
+}
+
+.bubble.popped::before,
+.bubble.popped::after {
+    display: none;
+}
+
+.bubble.popping {
+    animation: popAnimation 0.2s ease-out forwards;
+}
+
+@keyframes popAnimation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(0.85);
+    }
+}
+
+.size-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.size-btn {
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 6px 14px;
+    border-radius: 15px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.size-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.size-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #764ba2;
+    border-color: white;
+    font-weight: bold;
+}
+
+.instructions {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    padding: 10px;
+}
+
+.instructions p {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 15px;
+}
+
+/* 弹出特效容器 */
+.pop-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* 弹出粒子效果 */
+.pop-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleFly 0.6s ease-out forwards;
+}
+
+@keyframes particleFly {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0);
+    }
+}
+
+/* 连击特效 */
+.combo-burst {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #feca57;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    animation: comboBurst 0.8s ease-out forwards;
+    z-index: 1001;
+}
+
+@keyframes comboBurst {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -80%) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -120%) scale(1);
+    }
+}
+
+/* 满屏戳完庆祝动画 */
+.celebration {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    animation: celebrate 1.5s ease-out forwards;
+    z-index: 1002;
+    text-align: center;
+}
+
+@keyframes celebrate {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    30% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    70% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+}
+
+/* 彩虹泡泡（禅模式） */
+.bubble.rainbow {
+    background: radial-gradient(circle at 30% 30%, 
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 200, 200, 0.6) 20%,
+        rgba(255, 220, 180, 0.5) 35%,
+        rgba(200, 255, 200, 0.4) 50%,
+        rgba(180, 220, 255, 0.3) 70%,
+        rgba(220, 180, 255, 0.2) 100%);
+}
+
+/* 触摸反馈 */
+@media (hover: none) {
+    .bubble:active:not(.popped) {
+        transform: scale(0.85);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 400px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .stats {
+        gap: 10px;
+    }
+    
+    .pop-count {
+        padding: 6px 14px;
+        font-size: 1rem;
+    }
+    
+    .controls {
+        gap: 8px;
+    }
+    
+    .reset-btn,
+    .sound-btn,
+    .mode-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .bubble-wrap {
+        padding: 10px;
+        gap: 3px;
+    }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    
+    .bubble-wrap {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .bubble {
+        background: radial-gradient(circle at 30% 30%, 
+            rgba(255, 255, 255, 0.7) 0%,
+            rgba(200, 220, 255, 0.5) 30%,
+            rgba(150, 180, 220, 0.3) 60%,
+            rgba(100, 140, 180, 0.2) 100%);
+    }
+}

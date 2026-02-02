@@ -1,0 +1,380 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 50%, #7fcdbb 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.header h1 {
+    color: #2d5a45;
+    font-size: 1.8rem;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.wool-count {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    color: #555;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#woolCount {
+    font-weight: bold;
+    color: #e67e22;
+}
+
+.regrow-btn {
+    background: linear-gradient(135deg, #81c784, #4caf50);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    transition: all 0.3s ease;
+}
+
+.regrow-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.regrow-btn:active {
+    transform: scale(0.95);
+}
+
+.sound-btn {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
+    transition: all 0.3s ease;
+}
+
+.sound-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4);
+}
+
+.sound-btn:active {
+    transform: scale(0.95);
+}
+
+.sound-btn.muted {
+    background: linear-gradient(135deg, #b2bec3, #636e72);
+    box-shadow: 0 4px 15px rgba(99, 110, 114, 0.3);
+}
+
+.game-area {
+    position: relative;
+    width: 350px;
+    height: 350px;
+    margin: 10px 0;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><text y="20" font-size="20">✂️</text></svg>') 16 16, crosshair;
+    z-index: 10;
+}
+
+.sheep-face {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 90px;
+    background: linear-gradient(180deg, #ffe4c9 0%, #ffd4a8 100%);
+    border-radius: 45% 45% 50% 50%;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: inset 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.eyes {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px 15px 0;
+}
+
+.eye {
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pupil {
+    width: 12px;
+    height: 12px;
+    background: #333;
+    border-radius: 50%;
+    position: relative;
+    transition: transform 0.1s ease;
+}
+
+.pupil::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    right: 2px;
+}
+
+.nose {
+    width: 20px;
+    height: 12px;
+    background: #d4a574;
+    border-radius: 50%;
+    margin: 10px auto 5px;
+}
+
+.mouth {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #c9967a;
+    transition: all 0.3s ease;
+}
+
+.mouth.happy {
+    content: '◡';
+    transform: scale(1.2);
+}
+
+.ear {
+    position: absolute;
+    width: 30px;
+    height: 45px;
+    background: linear-gradient(180deg, #ffd4a8, #ffcba4);
+    border-radius: 50% 50% 50% 50%;
+    top: 15px;
+}
+
+.left-ear {
+    left: -15px;
+    transform: rotate(-20deg);
+}
+
+.right-ear {
+    right: -15px;
+    transform: rotate(20deg);
+}
+
+.ear::after {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 25px;
+    background: #ffb8a0;
+    border-radius: 50%;
+    top: 10px;
+    left: 7px;
+}
+
+.tool-selector {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.tool-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tool-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.tool-btn.active {
+    background: linear-gradient(135deg, #ff9a9e, #fecfef);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+}
+
+.instructions {
+    text-align: center;
+    color: #2d5a45;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 10px;
+}
+
+.falling-wool {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.wool-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fall 2s ease-in forwards;
+}
+
+@keyframes fall {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg) scale(0.5);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) rotate(3deg); }
+}
+
+.sheep-face.shaking {
+    animation: shake 0.1s ease-in-out;
+}
+
+/* 响应式 */
+@media (max-width: 400px) {
+    .game-area {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .sheep-face {
+        width: 80px;
+        height: 72px;
+    }
+    
+    .eye {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .pupil {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+/* 满足感动画 */
+.satisfaction-burst {
+    position: fixed;
+    pointer-events: none;
+    z-index: 200;
+    font-size: 2rem;
+    animation: burst 0.8s ease-out forwards;
+}
+
+@keyframes burst {
+    0% {
+        opacity: 1;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5) translateY(-30px);
+    }
+}
+
+/* 进度条样式 */
+.progress-container {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9a9e, #fecfef, #ffecd2);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 100%;
+}
+
+.progress-label {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #2d5a45;
+    margin-top: 5px;
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>解压剪羊毛 🐑</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🐑 解压剪羊毛</h1>
+            <div class="stats">
+                <span class="wool-count">羊毛: <span id="woolCount">0</span> 克</span>
+                <button id="regrowBtn" class="regrow-btn">🌱 重新长毛</button>
+                <button id="soundToggle" class="sound-btn">🔊 音效</button>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas"></canvas>
+            <div class="sheep-face" id="sheepFace">
+                <div class="eyes">
+                    <div class="eye left">
+                        <div class="pupil"></div>
+                    </div>
+                    <div class="eye right">
+                        <div class="pupil"></div>
+                    </div>
+                </div>
+                <div class="nose"></div>
+                <div class="mouth" id="mouth">ω</div>
+                <div class="ear left-ear"></div>
+                <div class="ear right-ear"></div>
+            </div>
+        </div>
+        
+        <div class="tool-selector">
+            <button class="tool-btn active" data-tool="scissors">✂️ 剪刀</button>
+            <button class="tool-btn" data-tool="razor">🪒 剃刀</button>
+        </div>
+        
+        <div class="instructions">
+            <p>💡 用手指或鼠标在羊身上滑动来剪羊毛</p>
+        </div>
+    </div>
+    
+    <div class="falling-wool" id="fallingWool"></div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
