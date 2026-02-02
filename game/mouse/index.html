@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>打地鼠 🔨</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🔨 打地鼠</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">分数</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">时间</span>
+                    <span class="stat-value" id="timer">30</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最高</span>
+                    <span class="stat-value" id="highScore">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="game-area" id="gameArea">
+            <div class="holes-grid">
+                <div class="hole" data-hole="0">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="1">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="2">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="3">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="4">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="5">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="6">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="7">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+                <div class="hole" data-hole="8">
+                    <div class="mole"><span class="mole-face">🐹</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 开始/结束界面 -->
+        <div class="overlay" id="overlay">
+            <div class="overlay-content">
+                <div class="overlay-icon" id="overlayIcon">🐹</div>
+                <h2 id="overlayTitle">打地鼠</h2>
+                <p id="overlayMessage">选择难度开始游戏</p>
+                <div class="final-score" id="finalScore"></div>
+                
+                <!-- 难度选择 -->
+                <div class="difficulty-select" id="difficultySelect">
+                    <button class="diff-option" data-diff="easy">
+                        <span class="diff-icon">🐢</span>
+                        <span class="diff-name">简单</span>
+                        <span class="diff-desc">适合新手</span>
+                    </button>
+                    <button class="diff-option" data-diff="normal">
+                        <span class="diff-icon">🐰</span>
+                        <span class="diff-name">普通</span>
+                        <span class="diff-desc">经典模式</span>
+                    </button>
+                    <button class="diff-option" data-diff="hard">
+                        <span class="diff-icon">🐆</span>
+                        <span class="diff-name">困难</span>
+                        <span class="diff-desc">极限挑战</span>
+                    </button>
+                </div>
+
+                <!-- 自定义图片 -->
+                <div class="custom-image" id="customImageSection">
+                    <label class="upload-btn" for="imageUpload">
+                        <span>📷</span>
+                        <span id="uploadText">上传自定义头像</span>
+                    </label>
+                    <input type="file" id="imageUpload" accept="image/*" hidden>
+                    <div class="preview-container" id="previewContainer">
+                        <img id="previewImage" src="" alt="preview">
+                        <button class="remove-btn" id="removeImage">✕</button>
+                    </div>
+                </div>
+
+                <button class="start-btn hidden" id="startBtn">开始游戏</button>
+            </div>
+        </div>
+
+        <!-- 控制栏 -->
+        <div class="controls">
+            <button class="control-btn" id="soundToggle">🔊</button>
+            <div class="game-info-display">
+                <span id="currentDiffDisplay">简单模式</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 锤子光标 -->
+    <div class="hammer" id="hammer">🔨</div>
+
+    <!-- 得分动画 -->
+    <div class="score-popup" id="scorePopup">+10</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
