@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB 转 TXT 工具</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>EPUB 转 TXT 工具</h1>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+            </div>
+            <p class="subtitle">将 EPUB 电子书转换为纯文本 TXT 格式</p>
+        </header>
+
+        <main>
+            <!-- 上传区域 -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📚</div>
+                    <h3>拖拽 EPUB 文件到此处</h3>
+                    <p>或者点击选择文件</p>
+                    <input type="file" id="fileInput" accept=".epub" hidden>
+                    <button class="btn btn-primary" id="selectFileBtn">选择 EPUB 文件</button>
+                </div>
+                <div class="file-info" id="fileInfo" hidden>
+                    <div class="file-icon">📕</div>
+                    <div class="file-details">
+                        <span class="file-name" id="fileName"></span>
+                        <span class="file-size" id="fileSize"></span>
+                    </div>
+                    <button class="btn btn-secondary" id="removeFileBtn">移除</button>
+                </div>
+            </section>
+
+            <!-- 转换设置 -->
+            <section class="settings-section" id="settingsSection" hidden>
+                <h2>⚙️ 转换设置</h2>
+                
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="outputFormat">输出格式</label>
+                        <select id="outputFormat" class="setting-select">
+                            <option value="single">单个 TXT 文件（所有章节合并）</option>
+                            <option value="multiple">多个 TXT 文件（按章节分离）</option>
+                        </select>
+                        <p class="setting-hint">选择是将所有章节合并为一个文件还是分别保存</p>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="chapterSeparator">章节分隔符</label>
+                        <input type="text" id="chapterSeparator" value="========================================" placeholder="章节分隔符">
+                        <p class="setting-hint">用于分隔章节的文本（仅在合并模式下使用）</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="convertBtn">
+                    <span class="btn-icon">🔄</span>
+                    开始转换
+                </button>
+            </section>
+
+            <!-- 预览区域 -->
+            <section class="preview-section" id="previewSection" hidden>
+                <h2>📑 EPUB 信息</h2>
+                
+                <div class="epub-info" id="epubInfo">
+                    <div class="info-item">
+                        <span class="info-label">书名</span>
+                        <span class="info-value" id="bookTitle">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">作者</span>
+                        <span class="info-value" id="bookAuthor">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">总章节数</span>
+                        <span class="info-value" id="totalChapters">-</span>
+                    </div>
+                </div>
+
+                <div class="chapter-list-container">
+                    <h3>📋 章节列表</h3>
+                    <div class="chapter-list" id="chapterList"></div>
+                </div>
+            </section>
+
+            <!-- 进度区域 -->
+            <section class="progress-section" id="progressSection" hidden>
+                <h2>⏳ 转换进度</h2>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">准备中...</div>
+                </div>
+                <div class="progress-log" id="progressLog"></div>
+            </section>
+
+            <!-- 结果区域 -->
+            <section class="result-section" id="resultSection" hidden>
+                <h2>✅ 转换完成</h2>
+                <div class="result-summary" id="resultSummary">
+                    <div class="result-icon">🎉</div>
+                    <p class="result-text">成功转换 <span id="resultCount">0</span> 个文件</p>
+                </div>
+                <div class="result-files" id="resultFiles"></div>
+                <div class="result-actions">
+                    <button class="btn btn-primary" id="downloadAllBtn">
+                        <span class="btn-icon">📥</span>
+                        下载全部
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        <span class="btn-icon">🔄</span>
+                        转换新文件
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>EPUB 转 TXT 工具 - 将电子书转换为纯文本格式</p>
+        </footer>
+    </div>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.textContent = '☀️';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
