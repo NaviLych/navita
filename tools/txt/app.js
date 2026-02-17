@@ -328,7 +328,7 @@ class EPUBToTxtConverter {
         this.resultFiles = [];
 
         const outputFormat = this.outputFormat.value;
-        const separator = this.chapterSeparator.value || '\n\n========================================\n\n';
+        const separator = this.chapterSeparator.value || '========================================';
 
         try {
             if (outputFormat === 'single') {
@@ -338,7 +338,7 @@ class EPUBToTxtConverter {
 
                 const allText = this.chapters.map(chapter => {
                     return `${chapter.title}\n\n${chapter.text}`;
-                }).join(separator);
+                }).join(`\n\n${separator}\n\n`);
 
                 const blob = new Blob([allText], { type: 'text/plain;charset=utf-8' });
                 const fileName = `${this.metadata.title}.txt`;
