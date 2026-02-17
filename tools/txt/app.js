@@ -127,8 +127,31 @@ class EPUBToTxtConverter {
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
+    async ensureJSZip() {
+        if (typeof JSZip !== 'undefined') {
+            return;
+        }
+
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            script.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucDxmsAmJEd4NrGcLbCBu6oICjZRdONJpNYmA5yQyB3F0qBLLqKPEn6YF6cZ3VgQ==';
+            script.crossOrigin = 'anonymous';
+            script.referrerPolicy = 'no-referrer';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('JSZip 依赖加载失败'));
+            document.head.appendChild(script);
+        });
+
+        if (typeof JSZip === 'undefined') {
+            throw new Error('JSZip 依赖加载失败，请检查网络后重试');
+        }
+    }
+
     async parseEPUB() {
         try {
+            await this.ensureJSZip();
+
             // 读取 EPUB 文件
             const arrayBuffer = await this.file.arrayBuffer();
             this.zip = await JSZip.loadAsync(arrayBuffer);
