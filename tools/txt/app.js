@@ -3,6 +3,10 @@
  * 将 EPUB 电子书转换为纯文本格式
  */
 
+// Constants
+const MAX_CHAPTER_TITLE_LENGTH = 50;
+const DEFAULT_COMPRESSION_LEVEL = 6; // Balance between compression ratio and speed
+
 class EPUBToTxtConverter {
     constructor() {
         this.file = null;
@@ -262,7 +266,7 @@ class EPUBToTxtConverter {
 
             const h1 = doc.querySelector('h1, h2, h3');
             if (h1?.textContent?.trim()) {
-                return h1.textContent.trim().substring(0, 50);
+                return h1.textContent.trim().substring(0, MAX_CHAPTER_TITLE_LENGTH);
             }
 
             return null;
@@ -451,7 +455,7 @@ class EPUBToTxtConverter {
             const blob = await zip.generateAsync({
                 type: 'blob',
                 compression: 'DEFLATE',
-                compressionOptions: { level: 6 }
+                compressionOptions: { level: DEFAULT_COMPRESSION_LEVEL }
             });
 
             const url = URL.createObjectURL(blob);
