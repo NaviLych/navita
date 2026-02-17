@@ -135,6 +135,7 @@ class EPUBToTxtConverter {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            script.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucDxmsAmJEd4NrGcLbCBu6oICjZRdONJpNYmA5yQyB3F0qBLLqKPEn6YF6cZ3VgQ==';
             script.crossOrigin = 'anonymous';
             script.referrerPolicy = 'no-referrer';
             script.onload = resolve;
