@@ -175,10 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       wrapper.scrollTo({ top: wrapper.scrollHeight, behavior: 'smooth' });
     }
-  });
 
-  // 数字键快速跳转章节
-  document.addEventListener('keydown', (e) => {
+    // 数字键快速跳转章节
     const num = parseInt(e.key);
     if (num >= 1 && num <= chapters.length) {
       let targetIdx = 0;
