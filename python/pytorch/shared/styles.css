@@ -1,0 +1,159 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{background:#0a0a0a;color:#fff}
+
+.app{height:100%;position:relative}
+
+/* 进度条 */
+.progress-bar{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);width:0%;transition:width .3s}
+.card-counter{position:fixed;top:12px;right:16px;font-size:14px;opacity:0.6;z-index:100}
+
+/* 卡片容器 */
+.cards-wrapper{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
+.cards-wrapper::-webkit-scrollbar{display:none}
+
+/* 单张卡片 */
+.card{height:100vh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;padding:20px;position:relative}
+.card[data-theme="blue"]{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)}
+.card[data-theme="green"]{background:linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)}
+.card[data-theme="purple"]{background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%)}
+.card[data-theme="orange"]{background:linear-gradient(135deg,#1a1a2e 0%,#3d2914 100%)}
+.card[data-theme="red"]{background:linear-gradient(135deg,#1a0a0a 0%,#4a1a1a 100%)}
+.card[data-theme="teal"]{background:linear-gradient(135deg,#0a1a1a 0%,#1a3a3a 100%)}
+.card[data-theme="indigo"]{background:linear-gradient(135deg,#0f0a2e 0%,#1a1a4e 100%)}
+.card[data-theme="pink"]{background:linear-gradient(135deg,#2e0a1a 0%,#4e1a3a 100%)}
+
+.card-content{max-width:460px;width:100%;text-align:center;max-height:calc(100vh - 60px);overflow-y:auto;padding:10px 0}
+.card-content::-webkit-scrollbar{display:none}
+.card-badge{display:inline-block;background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:20px;font-size:12px;margin-bottom:16px}
+.card h1{font-size:1.5rem;margin-bottom:12px;line-height:1.3}
+.card p{font-size:0.95rem;line-height:1.6;opacity:0.9}
+.card .big-text{font-size:1.1rem;margin-bottom:16px}
+.card .small{font-size:0.85rem;opacity:0.7;margin-top:8px}
+.card em{font-style:normal;color:#ffd700}
+.card strong{color:#7dd3fc}
+.card b{color:#a5f3fc}
+
+/* 两列布局 */
+.two-col{display:flex;gap:16px;margin:16px 0}
+.col{flex:1;background:rgba(255,255,255,0.05);border-radius:12px;padding:14px}
+.col h3{font-size:1rem;margin:6px 0}
+.icon-big{font-size:2.2rem}
+
+/* 三列布局 */
+.three-col{display:flex;gap:10px;margin:16px 0}
+.three-col .col{padding:10px}
+
+/* 例子盒子 */
+.example-box{background:rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin:14px 0;text-align:left}
+.example-box ul{padding-left:20px;margin-top:8px}
+.example-box li{margin:5px 0;font-size:0.9rem}
+.example-title{font-size:0.9rem;margin-bottom:8px;opacity:0.8}
+
+/* 代码块 */
+.code-block{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin:12px 0;text-align:left;font-family:'Fira Code','SF Mono','Cascadia Code',Consolas,monospace;font-size:0.82rem;line-height:1.7;overflow-x:auto;position:relative}
+.code-block code{color:#e2e8f0;white-space:pre}
+.code-label{position:absolute;top:6px;right:10px;font-size:0.7rem;color:rgba(255,255,255,0.35);font-family:-apple-system,sans-serif}
+
+/* 代码高亮 */
+.code-block .kw{color:#c792ea}
+.code-block .fn{color:#82aaff}
+.code-block .str{color:#c3e88d}
+.code-block .num{color:#f78c6c}
+.code-block .cmt{color:#546e7a;font-style:italic}
+.code-block .op{color:#89ddff}
+.code-block .cls{color:#ffcb6b}
+.code-block .var{color:#f07178}
+.code-block .dec{color:#c792ea}
+.code-block .built{color:#82aaff}
+
+/* 输出块 */
+.output-block{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:12px;margin:8px 0;text-align:left;font-family:monospace;font-size:0.82rem;line-height:1.6}
+.output-block::before{content:'▸ 输出';display:block;font-size:0.7rem;color:rgba(34,197,94,0.6);margin-bottom:6px;font-family:-apple-system,sans-serif}
+
+/* 滑动提示 */
+.swipe-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);font-size:14px;opacity:0.5;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+
+/* 公式盒子 */
+.formula-box{background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.25);border-radius:12px;padding:14px;margin:14px 0;text-align:center}
+.formula{font-size:1rem;font-family:'Times New Roman',serif;letter-spacing:1px;margin:6px 0}
+.formula-desc{font-size:0.8rem;opacity:0.7;margin-top:6px}
+
+/* 对比表格 */
+.compare-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.82rem}
+.compare-table th,.compare-table td{padding:8px;border:1px solid rgba(255,255,255,0.1);text-align:center}
+.compare-table th{background:rgba(255,255,255,0.1);font-weight:600}
+.compare-table tr:nth-child(even){background:rgba(255,255,255,0.03)}
+
+/* 步骤列表 */
+.step-list{text-align:left;margin:12px 0}
+.step{display:flex;gap:12px;padding:8px;margin:5px 0;background:rgba(255,255,255,0.05);border-radius:8px;align-items:flex-start}
+.step-num{background:linear-gradient(135deg,#ee7752,#e73c7e);color:#fff;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;flex-shrink:0}
+.step-content{flex:1;font-size:0.88rem}
+
+/* 特性卡片 */
+.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.feature-card{background:rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center}
+.feature-card .feat-icon{font-size:1.6rem;margin-bottom:6px}
+.feature-card h4{font-size:0.9rem;margin-bottom:4px}
+.feature-card p{font-size:0.78rem;opacity:0.7}
+
+/* 注意/提示框 */
+.tip-box{background:rgba(59,130,246,0.12);border-left:3px solid #3b82f6;border-radius:0 10px 10px 0;padding:12px;margin:12px 0;text-align:left;font-size:0.88rem}
+.warn-box{background:rgba(251,191,36,0.12);border-left:3px solid #fbbf24;border-radius:0 10px 10px 0;padding:12px;margin:12px 0;text-align:left;font-size:0.88rem}
+
+/* 流程图 */
+.flow-chart{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 0;flex-wrap:wrap}
+.flow-step{background:rgba(255,255,255,0.1);padding:8px 14px;border-radius:8px;font-size:0.85rem;text-align:center}
+.flow-arrow{color:rgba(255,255,255,0.4);font-size:1.2rem}
+
+/* 层叠架构图 */
+.arch-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.arch-layer{padding:10px;border-radius:8px;text-align:center;font-size:0.88rem}
+.arch-layer.top{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)}
+.arch-layer.mid{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3)}
+.arch-layer.bot{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3)}
+
+/* 章节导航 */
+.chapter-nav{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:6px}
+.chapter-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all .3s;position:relative}
+.chapter-dot:hover{background:rgba(255,255,255,0.5);transform:scale(1.3)}
+.chapter-dot.active{background:rgba(255,255,255,0.9);transform:scale(1.2)}
+.chapter-dot::before{content:attr(data-label);position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;background:rgba(0,0,0,0.8);padding:4px 8px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .2s}
+.chapter-dot:hover::before{opacity:1}
+
+/* 网络架构可视化 */
+.nn-visual{display:flex;align-items:center;justify-content:center;gap:20px;margin:16px 0}
+.nn-layer{display:flex;flex-direction:column;gap:6px;align-items:center}
+.nn-node{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.4)}
+.nn-node.active{background:rgba(102,126,234,0.5);border-color:#667eea}
+.nn-label{font-size:0.7rem;opacity:0.6;margin-top:4px}
+.nn-connections{width:40px;height:60px;position:relative;opacity:0.2}
+
+/* 损失函数图 */
+.loss-visual{text-align:center;margin:16px 0}
+.loss-curve{font-size:3rem;line-height:1}
+.loss-desc{font-size:0.8rem;opacity:0.7;margin-top:8px}
+
+/* 标签 */
+.tag{display:inline-block;font-size:0.7rem;padding:2px 8px;border-radius:4px;margin:2px}
+.tag.green{background:rgba(34,197,94,0.2);color:#4ade80}
+.tag.blue{background:rgba(59,130,246,0.2);color:#60a5fa}
+.tag.red{background:rgba(239,68,68,0.2);color:#f87171}
+.tag.yellow{background:rgba(251,191,36,0.2);color:#fbbf24}
+
+/* 响应式 */
+@media(max-width:400px){
+  .card h1{font-size:1.3rem}
+  .card-content{padding:0 6px}
+  .two-col{flex-direction:column;gap:10px}
+  .three-col{flex-direction:column;gap:8px}
+  .feature-grid{grid-template-columns:1fr}
+  .chapter-nav{right:6px}
+  .chapter-dot{width:8px;height:8px}
+  .code-block{font-size:0.75rem;padding:10px}
+  .flow-chart{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+}
