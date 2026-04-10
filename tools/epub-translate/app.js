@@ -233,7 +233,7 @@ class EPUBTranslateApp {
             'en';
         const identifier =
             metadata?.querySelector('dc\\:identifier, identifier, [*|identifier]')?.textContent?.trim() ||
-            `navita-${Date.now()}`;
+            `epub-translate-${Date.now()}`;
 
         this.metadata = { title, author, language, identifier };
     }
@@ -578,8 +578,8 @@ class EPUBTranslateApp {
     createTranslationParagraph(doc, text, isXml) {
         const namespace = doc.documentElement?.namespaceURI || 'http://www.w3.org/1999/xhtml';
         const paragraph = isXml ? doc.createElementNS(namespace, 'p') : doc.createElement('p');
-        paragraph.setAttribute('class', 'navita-translation');
-        paragraph.setAttribute('data-navita-translation', 'true');
+        paragraph.setAttribute('class', 'epub-translation');
+        paragraph.setAttribute('data-epub-translation', 'true');
         paragraph.setAttribute('style', 'margin:0.35em 0 1em; opacity:0.86; font-style:italic;');
         paragraph.textContent = text;
         return paragraph;
@@ -681,8 +681,8 @@ class EPUBTranslateApp {
         }
 
         return Array.from(body.querySelectorAll('p'))
-            .filter((element) => !element.closest('[data-navita-translation="true"]'))
-            .filter((element) => !element.hasAttribute('data-navita-translation'))
+            .filter((element) => !element.closest('[data-epub-translation="true"]'))
+            .filter((element) => !element.hasAttribute('data-epub-translation'))
             .filter((element) => this.normalizeText(element.textContent).length > 0);
     }
 
