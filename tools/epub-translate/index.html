@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB 逐段翻译器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>EPUB 逐段翻译器</h1>
+                    <p class="subtitle">上传 EPUB，确认章节结构后，按章节范围调用 OpenAI Compatible API 逐段翻译并写回新段落。</p>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="panel upload-panel">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📚</div>
+                    <h2>上传 EPUB</h2>
+                    <p>拖拽文件到这里，或点击选择。</p>
+                    <input type="file" id="fileInput" accept=".epub" hidden>
+                    <button class="btn btn-primary" id="selectFileBtn">选择 EPUB 文件</button>
+                </div>
+                <div class="file-card" id="fileCard" hidden>
+                    <div>
+                        <div class="file-name" id="fileName">-</div>
+                        <div class="file-meta" id="fileMeta">-</div>
+                    </div>
+                    <button class="btn btn-secondary" id="removeFileBtn">移除</button>
+                </div>
+            </section>
+
+            <section class="panel settings-panel" id="settingsPanel" hidden>
+                <div class="section-title">
+                    <h2>API 与翻译设置</h2>
+                    <p>API Key 只保留在当前页面内，不会写入本地存储。</p>
+                </div>
+                <div class="settings-grid">
+                    <label class="field">
+                        <span>Base URL</span>
+                        <input type="url" id="apiBaseUrl" placeholder="https://api.openai.com/v1">
+                    </label>
+                    <label class="field">
+                        <span>Model</span>
+                        <input type="text" id="modelName" placeholder="gpt-4.1-mini">
+                    </label>
+                    <label class="field">
+                        <span>API Key</span>
+                        <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+                    </label>
+                    <label class="field">
+                        <span>目标语言</span>
+                        <input type="text" id="targetLanguage" placeholder="简体中文">
+                    </label>
+                    <label class="field full-width">
+                        <span>系统提示词（可选）</span>
+                        <textarea id="systemPrompt" rows="4" placeholder="补充风格、术语、专有名词要求。"></textarea>
+                    </label>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="analyzeBtn">分析 EPUB 结构</button>
+                </div>
+            </section>
+
+            <section class="panel review-panel" id="reviewPanel" hidden>
+                <div class="section-title">
+                    <h2>确认章节结构</h2>
+                    <p>先浏览结构与预览，再选择要翻译的章节范围。</p>
+                </div>
+
+                <div class="meta-grid" id="metaGrid">
+                    <div class="meta-item">
+                        <span>书名</span>
+                        <strong id="bookTitle">-</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span>作者</span>
+                        <strong id="bookAuthor">-</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span>章节数</span>
+                        <strong id="chapterCount">-</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span>可翻译段落</span>
+                        <strong id="paragraphCount">-</strong>
+                    </div>
+                </div>
+
+                <div class="range-card">
+                    <div class="range-grid">
+                        <label class="field">
+                            <span>起始章节</span>
+                            <select id="startChapter"></select>
+                        </label>
+                        <label class="field">
+                            <span>结束章节</span>
+                            <select id="endChapter"></select>
+                        </label>
+                        <div class="selection-summary">
+                            <span>范围统计</span>
+                            <strong id="selectionSummary">-</strong>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-primary" id="translateBtn">开始逐段翻译</button>
+                    </div>
+                </div>
+
+                <div class="review-layout">
+                    <div class="chapter-browser">
+                        <div class="subheading">
+                            <h3>章节结构</h3>
+                            <span id="chapterHint">点击章节查看预览</span>
+                        </div>
+                        <div class="chapter-list" id="chapterList"></div>
+                    </div>
+                    <div class="chapter-preview">
+                        <div class="subheading">
+                            <h3>章节预览</h3>
+                            <span id="previewLabel">未选择章节</span>
+                        </div>
+                        <div class="preview-card" id="previewCard">
+                            <p class="empty-text">分析完成后，点击左侧章节查看内容摘要。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel progress-panel" id="progressPanel" hidden>
+                <div class="section-title">
+                    <h2>翻译进度</h2>
+                    <p id="progressStatus">等待开始…</p>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-stats">
+                    <span id="progressText">0 / 0</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="log-list" id="logList"></div>
+            </section>
+
+            <section class="panel result-panel" id="resultPanel" hidden>
+                <div class="section-title">
+                    <h2>翻译完成</h2>
+                    <p id="resultSummary">可下载新的 EPUB 文件。</p>
+                </div>
+                <div class="result-card">
+                    <div>
+                        <div class="file-name" id="resultFileName">-</div>
+                        <div class="file-meta" id="resultFileMeta">-</div>
+                    </div>
+                    <div class="actions compact">
+                        <button class="btn btn-primary" id="downloadBtn">下载翻译后的 EPUB</button>
+                        <button class="btn btn-secondary" id="resetBtn">处理新文件</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            root.setAttribute('data-theme', 'dark');
+            themeToggle.textContent = '☀️';
+        }
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', nextTheme);
+            themeToggle.textContent = nextTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', nextTheme);
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
