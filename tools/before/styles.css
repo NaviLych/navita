@@ -227,7 +227,7 @@ img {
 }
 
 .stage-overlay::after {
-    content: '拖动图片调整取景';
+    content: attr(data-hint);
     position: absolute;
     left: 12px;
     bottom: 12px;

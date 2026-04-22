@@ -5,6 +5,9 @@ const RATIO_MAP = {
     '16:9': [16, 9],
     '9:16': [9, 16]
 };
+const MS_PER_SECOND = 1000;
+const LOOPBACK_DURATION_MULTIPLIER = 2;
+const CANVAS_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei", "Segoe UI", sans-serif';
 
 const state = {
     ratio: '4:5',
@@ -560,7 +563,7 @@ function drawLabel(ctx, text, x, y, align) {
     const paddingY = 10;
     const radius = 999;
     ctx.save();
-    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * 0.03))}px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif`;
+    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * 0.03))}px ${CANVAS_FONT_STACK}`;
     const metrics = ctx.measureText(text);
     const width = metrics.width + paddingX * 2;
     const height = Math.max(36, Math.round(ctx.canvas.height * 0.085));
@@ -684,7 +687,9 @@ function getSupportedVideoType() {
 }
 
 function renderAnimationFrames(canvas, ctx) {
-    const durationMs = state.loopBack ? state.duration * 2000 : state.duration * 1000;
+    const durationMs = state.loopBack
+        ? state.duration * MS_PER_SECOND * LOOPBACK_DURATION_MULTIPLIER
+        : state.duration * MS_PER_SECOND;
 
     return new Promise((resolve) => {
         const start = performance.now();
