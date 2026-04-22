@@ -10,6 +10,13 @@
     --success: #3dd9b4;
     --shadow: 0 24px 60px rgba(4, 9, 20, 0.45);
     --frame-ratio: 4 / 5;
+    --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+        'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Segoe UI', sans-serif;
+    --grid-step-1: 33.333%;
+    --grid-step-2: 66.666%;
+    --grid-line-half: 0.5px;
+    --grid-line-color: rgba(255, 255, 255, 0.14);
 }
 
 [data-theme="light"] {
@@ -36,9 +43,7 @@ body {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC',
-        'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
-        'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Segoe UI', sans-serif;
+    font-family: var(--font-family-base);
     background:
         radial-gradient(circle at top left, rgba(109, 139, 255, 0.25), transparent 35%),
         radial-gradient(circle at top right, rgba(143, 104, 255, 0.24), transparent 32%),
@@ -220,10 +225,10 @@ img {
     inset: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(to right, transparent calc(33.333% - 0.5px), rgba(255,255,255,0.14) calc(33.333% - 0.5px), rgba(255,255,255,0.14) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
-        linear-gradient(to right, transparent calc(66.666% - 0.5px), rgba(255,255,255,0.14) calc(66.666% - 0.5px), rgba(255,255,255,0.14) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
-        linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgba(255,255,255,0.14) calc(33.333% - 0.5px), rgba(255,255,255,0.14) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
-        linear-gradient(to bottom, transparent calc(66.666% - 0.5px), rgba(255,255,255,0.14) calc(66.666% - 0.5px), rgba(255,255,255,0.14) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+        linear-gradient(to right, transparent calc(var(--grid-step-1) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-1) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-1) + var(--grid-line-half)), transparent calc(var(--grid-step-1) + var(--grid-line-half))),
+        linear-gradient(to right, transparent calc(var(--grid-step-2) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-2) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-2) + var(--grid-line-half)), transparent calc(var(--grid-step-2) + var(--grid-line-half))),
+        linear-gradient(to bottom, transparent calc(var(--grid-step-1) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-1) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-1) + var(--grid-line-half)), transparent calc(var(--grid-step-1) + var(--grid-line-half))),
+        linear-gradient(to bottom, transparent calc(var(--grid-step-2) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-2) - var(--grid-line-half)), var(--grid-line-color) calc(var(--grid-step-2) + var(--grid-line-half)), transparent calc(var(--grid-step-2) + var(--grid-line-half)));
 }
 
 .stage-overlay::after {

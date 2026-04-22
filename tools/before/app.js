@@ -8,9 +8,11 @@ const RATIO_MAP = {
 const MS_PER_SECOND = 1000;
 const LOOPBACK_DURATION_MULTIPLIER = 2;
 const LABEL_FONT_SIZE_RATIO = 0.03;
+const MIN_LABEL_FONT_SIZE = 14;
+const LABEL_HEIGHT_RATIO = 0.085;
+const MIN_LABEL_HEIGHT = 36;
 const EXPORT_LONG_EDGE = 1440;
 const URL_REVOKE_DELAY_MS = 1000;
-const CANVAS_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei", "Segoe UI", sans-serif';
 
 const state = {
     ratio: '4:5',
@@ -565,11 +567,14 @@ function drawLabel(ctx, text, x, y, align) {
     const paddingX = 14;
     const paddingY = 10;
     const radius = 999;
+    const canvasFontStack = getComputedStyle(document.documentElement)
+        .getPropertyValue('--font-family-base')
+        .trim();
     ctx.save();
-    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * LABEL_FONT_SIZE_RATIO))}px ${CANVAS_FONT_STACK}`;
+    ctx.font = `600 ${Math.max(MIN_LABEL_FONT_SIZE, Math.round(ctx.canvas.width * LABEL_FONT_SIZE_RATIO))}px ${canvasFontStack}`;
     const metrics = ctx.measureText(text);
     const width = metrics.width + paddingX * 2;
-    const height = Math.max(36, Math.round(ctx.canvas.height * 0.085));
+    const height = Math.max(MIN_LABEL_HEIGHT, Math.round(ctx.canvas.height * LABEL_HEIGHT_RATIO));
     const boxX = align === 'right' ? x - width : x;
 
     roundRect(ctx, boxX, y, width, height, radius);
