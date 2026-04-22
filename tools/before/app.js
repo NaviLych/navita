@@ -7,6 +7,9 @@ const RATIO_MAP = {
 };
 const MS_PER_SECOND = 1000;
 const LOOPBACK_DURATION_MULTIPLIER = 2;
+const LABEL_FONT_SIZE_RATIO = 0.03;
+const EXPORT_LONG_EDGE = 1440;
+const URL_REVOKE_DELAY_MS = 1000;
 const CANVAS_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei", "Segoe UI", sans-serif';
 
 const state = {
@@ -563,7 +566,7 @@ function drawLabel(ctx, text, x, y, align) {
     const paddingY = 10;
     const radius = 999;
     ctx.save();
-    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * 0.03))}px ${CANVAS_FONT_STACK}`;
+    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * LABEL_FONT_SIZE_RATIO))}px ${CANVAS_FONT_STACK}`;
     const metrics = ctx.measureText(text);
     const width = metrics.width + paddingX * 2;
     const height = Math.max(36, Math.round(ctx.canvas.height * 0.085));
@@ -596,9 +599,8 @@ function hasBothImages() {
 
 function buildExportCanvas() {
     const [ratioW, ratioH] = RATIO_MAP[state.ratio];
-    const longEdge = 1440;
-    const width = ratioW >= ratioH ? longEdge : Math.round((longEdge * ratioW) / ratioH);
-    const height = ratioH > ratioW ? longEdge : Math.round((longEdge * ratioH) / ratioW);
+    const width = ratioW >= ratioH ? EXPORT_LONG_EDGE : Math.round((EXPORT_LONG_EDGE * ratioW) / ratioH);
+    const height = ratioH > ratioW ? EXPORT_LONG_EDGE : Math.round((EXPORT_LONG_EDGE * ratioH) / ratioW);
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -720,7 +722,7 @@ function downloadBlob(blob, filename) {
     link.href = url;
     link.download = filename;
     link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), URL_REVOKE_DELAY_MS);
 }
 
 function setExporting(exporting, message) {

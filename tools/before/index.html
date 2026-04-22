@@ -173,18 +173,23 @@
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const root = document.documentElement;
+        const updateThemeToggle = (theme) => {
+            const isDark = theme === 'dark';
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            themeToggle.title = isDark ? '切换到浅色主题' : '切换到深色主题';
+            themeToggle.setAttribute('aria-label', themeToggle.title);
+        };
         const savedTheme = localStorage.getItem('theme') || 'dark';
         if (savedTheme === 'light') {
             root.setAttribute('data-theme', 'light');
-            themeToggle.textContent = '🌙';
         } else {
             root.setAttribute('data-theme', 'dark');
-            themeToggle.textContent = '☀️';
         }
+        updateThemeToggle(savedTheme);
         themeToggle.addEventListener('click', () => {
             const nextTheme = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             root.setAttribute('data-theme', nextTheme);
-            themeToggle.textContent = nextTheme === 'light' ? '🌙' : '☀️';
+            updateThemeToggle(nextTheme);
             localStorage.setItem('theme', nextTheme);
         });
     </script>
