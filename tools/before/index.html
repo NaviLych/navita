@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Before / After Live 图</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div>
+                <p class="eyebrow">tools / before</p>
+                <h1>Before / After Live 图</h1>
+                <p class="subtitle">上传两张图，分别调整取景区域，实时预览 before / after 动画对比，并导出动态 live 图。</p>
+            </div>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">🌙</button>
+        </header>
+
+        <main class="layout">
+            <section class="panel control-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>素材与编辑</h2>
+                        <p>每张图都可以单独拖动、缩放和重置。</p>
+                    </div>
+                </div>
+
+                <div class="editor-grid">
+                    <article class="editor-card" data-side="before">
+                        <div class="editor-top">
+                            <div>
+                                <h3>Before</h3>
+                                <p class="file-name" id="beforeFileName">未上传图片</p>
+                            </div>
+                            <label class="btn btn-primary" for="beforeInput">上传图片</label>
+                            <input type="file" id="beforeInput" accept="image/*" hidden>
+                        </div>
+                        <div class="stage-shell">
+                            <div class="image-stage" id="beforeStage" data-side="before" data-hint="拖动图片调整取景">
+                                <img id="beforeImage" alt="Before 预览图">
+                                <div class="stage-overlay" data-hint="拖动图片调整取景"></div>
+                                <div class="stage-placeholder" id="beforePlaceholder">上传 before 图片</div>
+                            </div>
+                        </div>
+                        <div class="editor-controls">
+                            <label class="field compact">
+                                <span>缩放</span>
+                                <input type="range" id="beforeZoom" min="1" max="3" step="0.01" value="1">
+                            </label>
+                            <span class="zoom-value" id="beforeZoomValue">100%</span>
+                            <button class="btn btn-secondary" id="beforeReset" type="button">重置取景</button>
+                        </div>
+                    </article>
+
+                    <article class="editor-card" data-side="after">
+                        <div class="editor-top">
+                            <div>
+                                <h3>After</h3>
+                                <p class="file-name" id="afterFileName">未上传图片</p>
+                            </div>
+                            <label class="btn btn-primary" for="afterInput">上传图片</label>
+                            <input type="file" id="afterInput" accept="image/*" hidden>
+                        </div>
+                        <div class="stage-shell">
+                            <div class="image-stage" id="afterStage" data-side="after" data-hint="拖动图片调整取景">
+                                <img id="afterImage" alt="After 预览图">
+                                <div class="stage-overlay" data-hint="拖动图片调整取景"></div>
+                                <div class="stage-placeholder" id="afterPlaceholder">上传 after 图片</div>
+                            </div>
+                        </div>
+                        <div class="editor-controls">
+                            <label class="field compact">
+                                <span>缩放</span>
+                                <input type="range" id="afterZoom" min="1" max="3" step="0.01" value="1">
+                            </label>
+                            <span class="zoom-value" id="afterZoomValue">100%</span>
+                            <button class="btn btn-secondary" id="afterReset" type="button">重置取景</button>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="settings-grid">
+                    <label class="field">
+                        <span>画面比例</span>
+                        <select id="ratioSelect">
+                            <option value="1:1">1:1 方图</option>
+                            <option value="4:5" selected>4:5 竖图</option>
+                            <option value="3:4">3:4 竖图</option>
+                            <option value="16:9">16:9 横图</option>
+                            <option value="9:16">9:16 竖屏</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>拼接方向</span>
+                        <select id="directionSelect">
+                            <option value="vertical" selected>左右对比</option>
+                            <option value="horizontal">上下对比</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>静态分割位置</span>
+                        <input type="range" id="dividerRange" min="0.05" max="0.95" step="0.01" value="0.5">
+                    </label>
+                    <label class="field">
+                        <span>动画时长</span>
+                        <input type="range" id="durationRange" min="1.2" max="6" step="0.1" value="2.4">
+                    </label>
+                    <label class="field">
+                        <span>Before 标签</span>
+                        <input type="text" id="beforeLabel" value="Before" maxlength="20">
+                    </label>
+                    <label class="field">
+                        <span>After 标签</span>
+                        <input type="text" id="afterLabel" value="After" maxlength="20">
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <label class="toggle-chip">
+                        <input type="checkbox" id="showLabels" checked>
+                        <span>显示标签</span>
+                    </label>
+                    <label class="toggle-chip">
+                        <input type="checkbox" id="loopBack" checked>
+                        <span>往返动画</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="panel preview-panel">
+                <div class="panel-header preview-header">
+                    <div>
+                        <h2>实时预览</h2>
+                        <p>拖动预览图中的分割线，可以直接调节对比位置。</p>
+                    </div>
+                    <div class="preview-actions">
+                        <button class="btn btn-secondary" id="playToggle" type="button">暂停预览</button>
+                    </div>
+                </div>
+
+                <div class="preview-frame" id="previewFrame">
+                    <canvas id="previewCanvas"></canvas>
+                    <div class="preview-empty" id="previewEmpty">先上传 before / after 两张图片</div>
+                </div>
+
+                <div class="stat-row">
+                    <div class="stat-card">
+                        <span>当前比例</span>
+                        <strong id="ratioValue">4:5</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>方向</span>
+                        <strong id="directionValue">左右对比</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>动画时长</span>
+                        <strong id="durationValue">2.4s</strong>
+                    </div>
+                </div>
+
+                <div class="export-actions">
+                    <button class="btn btn-primary" id="exportPngBtn" type="button">导出封面 PNG</button>
+                    <button class="btn btn-primary accent" id="exportLiveBtn" type="button">导出动态 Live 图</button>
+                </div>
+                <p class="hint" id="statusText">动态导出为 WebM，可直接预览动画效果。</p>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        const updateThemeToggle = (theme) => {
+            const isDark = theme === 'dark';
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            themeToggle.title = isDark ? '切换到浅色主题' : '切换到深色主题';
+            themeToggle.setAttribute('aria-label', themeToggle.title);
+        };
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            root.setAttribute('data-theme', 'light');
+        } else {
+            root.setAttribute('data-theme', 'dark');
+        }
+        updateThemeToggle(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            root.setAttribute('data-theme', nextTheme);
+            updateThemeToggle(nextTheme);
+            localStorage.setItem('theme', nextTheme);
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
