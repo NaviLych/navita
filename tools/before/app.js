@@ -644,9 +644,9 @@ async function exportLiveVideo() {
 
     const canvas = buildExportCanvas();
     const ctx = canvas.getContext('2d');
-    const mimeType = getSupportedVideoType();
-    if (!mimeType) {
-        showToast('当前浏览器缺少 WebM 导出支持');
+    const videoFormat = getSupportedVideoFormat();
+    if (!videoFormat) {
+        showToast('当前浏览器缺少可用的视频导出格式');
         return;
     }
 
@@ -655,7 +655,7 @@ async function exportLiveVideo() {
     try {
         const stream = canvas.captureStream(30);
         const chunks = [];
-        const recorder = new MediaRecorder(stream, { mimeType });
+        const recorder = new MediaRecorder(stream, { mimeType: videoFormat.mimeType });
 
         recorder.ondataavailable = (event) => {
             if (event.data && event.data.size > 0) {
@@ -672,10 +672,11 @@ async function exportLiveVideo() {
         recorder.stop();
         await finished;
 
-        const blob = new Blob(chunks, { type: mimeType });
-        downloadBlob(blob, `before-after-live-${Date.now()}.webm`);
-        showToast('动态 Live 图已导出');
-        setExporting(false, '动态导出为 WebM，可直接预览动画效果。');
+        const blob = new Blob(chunks, { type: videoFormat.mimeType });
+        const filename = `before-after-live-${Date.now()}.${videoFormat.extension}`;
+        const savedByShare = await saveToIOSAlbumOrDownload(blob, filename);
+        showToast(savedByShare ? '已打开系统分享，请选择“存储视频”' : '动态 Live 图已导出');
+        setExporting(false, '动态导出支持 iOS 相册保存与文件下载。');
     } catch (error) {
         console.error(error);
         setExporting(false, '动态导出失败，请重试。');
@@ -683,14 +684,16 @@ async function exportLiveVideo() {
     }
 }
 
-function getSupportedVideoType() {
+function getSupportedVideoFormat() {
     const candidates = [
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm'
+        { mimeType: 'video/mp4;codecs=h264', extension: 'mp4' },
+        { mimeType: 'video/mp4', extension: 'mp4' },
+        { mimeType: 'video/webm;codecs=vp9', extension: 'webm' },
+        { mimeType: 'video/webm;codecs=vp8', extension: 'webm' },
+        { mimeType: 'video/webm', extension: 'webm' }
     ];
 
-    return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || '';
+    return candidates.find((item) => MediaRecorder.isTypeSupported(item.mimeType)) || null;
 }
 
 function renderAnimationFrames(canvas, ctx) {
@@ -728,6 +731,53 @@ function downloadBlob(blob, filename) {
     link.download = filename;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), URL_REVOKE_DELAY_MS);
+}
+
+async function saveToIOSAlbumOrDownload(blob, filename) {
+    if (!isIOSDevice()) {
+        downloadBlob(blob, filename);
+        return false;
+    }
+
+    const file = buildShareableFile(blob, filename);
+    if (!file || typeof navigator.share !== 'function') {
+        downloadBlob(blob, filename);
+        return false;
+    }
+
+    try {
+        if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [file] })) {
+            downloadBlob(blob, filename);
+            return false;
+        }
+        await navigator.share({
+            title: 'Before / After Live 图',
+            files: [file]
+        });
+        return true;
+    } catch (error) {
+        if (error?.name === 'AbortError') {
+            return true;
+        }
+        downloadBlob(blob, filename);
+        return false;
+    }
+}
+
+function buildShareableFile(blob, filename) {
+    if (typeof File !== 'function') {
+        return null;
+    }
+    return new File([blob], filename, {
+        type: blob.type || 'application/octet-stream'
+    });
+}
+
+function isIOSDevice() {
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const touchPoints = navigator.maxTouchPoints || 0;
+    return /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && touchPoints > 1);
 }
 
 function setExporting(exporting, message) {
