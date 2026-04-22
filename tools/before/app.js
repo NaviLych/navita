@@ -560,7 +560,7 @@ function drawLabel(ctx, text, x, y, align) {
     const paddingY = 10;
     const radius = 999;
     ctx.save();
-    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * 0.03))}px Inter, sans-serif`;
+    ctx.font = `600 ${Math.max(14, Math.round(ctx.canvas.width * 0.03))}px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif`;
     const metrics = ctx.measureText(text);
     const width = metrics.width + paddingX * 2;
     const height = Math.max(36, Math.round(ctx.canvas.height * 0.085));
