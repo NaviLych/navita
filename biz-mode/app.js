@@ -110,6 +110,7 @@ function loadState() {
       });
     }
   } catch (error) {
+    console.warn('BMC Studio saved data could not be loaded and was reset.', error);
     localStorage.removeItem(storageKey);
   }
 }
@@ -419,7 +420,7 @@ function exportReport() {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  const safeName = state.projectName.replace(/[\\/:*?"<>|]+/g, '').trim() || 'bmc-report';
+  const safeName = (state.projectName.replace(/[\\/:*?"<>|]+/g, '').trim() || 'bmc-report').slice(0, 120);
   link.href = url;
   link.download = `${safeName}-BMC报告.html`;
   document.body.appendChild(link);
