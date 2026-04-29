@@ -83,6 +83,7 @@ const modules = [
 ];
 
 const insightKeywords = ['壁垒', '飞轮', '网络效应', '锁定', '护城河', '颠覆', '痛点', '场景', '假设', '验证', '迭代', '反馈', '闭环', '杠杆', '稀缺', '边际', '复用'];
+const maxExportFilenameLength = 120;
 const coherencePairs = [
   ['value', 'segments', '价值主张 ↔ 客户细分'],
   ['value', 'revenue', '价值主张 ↔ 收入来源'],
@@ -420,7 +421,7 @@ function exportReport() {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  const safeName = (state.projectName.replace(/[\\/:*?"<>|]+/g, '').trim() || 'bmc-report').slice(0, 120);
+  const safeName = (state.projectName.replace(/[\\/:*?"<>|]+/g, '').trim() || 'bmc-report').slice(0, maxExportFilenameLength);
   link.href = url;
   link.download = `${safeName}-BMC报告.html`;
   document.body.appendChild(link);
