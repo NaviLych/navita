@@ -402,7 +402,7 @@ function exportReport() {
   const moduleHtml = modules.map(item => `
     <section class="module">
       <h2>${item.icon} ${escapeHtml(item.name)} <small>${escapeHtml(item.english)}</small></h2>
-      <p>${escapeHtml(state.entries[item.id] || '未填写').replaceAll('\n', '<br>')}</p>
+      <p>${escapeHtml(state.entries[item.id] || '未填写')}</p>
     </section>
   `).join('');
   const html = `<!DOCTYPE html>
@@ -412,7 +412,7 @@ function exportReport() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(state.projectName)} · BMC 报告</title>
   <style>
-    body{margin:0;background:#141414;color:#e8e4df;font-family:Georgia,'Noto Serif SC',serif;line-height:1.7;padding:32px}main{max-width:920px;margin:auto}.hero,.module{background:#252525;border:1px solid #333;border-radius:20px;padding:24px;margin:18px 0}.grade{color:#d4af37;font-size:64px;line-height:1}h1,h2{margin:0 0 12px}small{color:#888;font-size:14px}.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.score{background:#1b1b1b;border-radius:14px;padding:16px}.score b{display:block;color:#d4af37;font-size:28px}.suggestions li{margin:8px 0}@media print{body{background:#fff;color:#111}.hero,.module,.score{border-color:#ddd;background:#fff}.grade,.score b{color:#8a6500}}
+    body{margin:0;background:#141414;color:#e8e4df;font-family:Georgia,'Noto Serif SC',serif;line-height:1.7;padding:32px}main{max-width:920px;margin:auto}.hero,.module{background:#252525;border:1px solid #333;border-radius:20px;padding:24px;margin:18px 0}.module p{white-space:pre-wrap}.grade{color:#d4af37;font-size:64px;line-height:1}h1,h2{margin:0 0 12px}small{color:#888;font-size:14px}.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.score{background:#1b1b1b;border-radius:14px;padding:16px}.score b{display:block;color:#d4af37;font-size:28px}.suggestions li{margin:8px 0}@media print{body{background:#fff;color:#111}.hero,.module,.score{border-color:#ddd;background:#fff}.grade,.score b{color:#8a6500}}
   </style>
 </head>
 <body>
