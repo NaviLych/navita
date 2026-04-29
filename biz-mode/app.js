@@ -83,7 +83,14 @@ const modules = [
 ];
 
 const insightKeywords = ['壁垒', '飞轮', '网络效应', '锁定', '护城河', '颠覆', '痛点', '场景', '假设', '验证', '迭代', '反馈', '闭环', '杠杆', '稀缺', '边际', '复用'];
+const insightKeywordTarget = 8;
 const maxExportFilenameLength = 120;
+const scoreWeights = {
+  completeness: 0.3,
+  depth: 0.3,
+  coherence: 0.25,
+  insight: 0.15
+};
 const coherencePairs = [
   ['value', 'segments', '价值主张 ↔ 客户细分'],
   ['value', 'revenue', '价值主张 ↔ 收入来源'],
@@ -132,6 +139,11 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function getSafeExportFilename(projectName) {
+  const sanitizedName = projectName.replace(/[\\/:*?"<>|]+/g, '').trim();
+  return (sanitizedName || 'bmc-report').slice(0, maxExportFilenameLength);
+}
+
 function textLength(value) {
   return value.replace(/\s/g, '').length;
 }
@@ -154,8 +166,13 @@ function calculateScores() {
   const coherence = Math.round((coherenceHits / coherencePairs.length) * 100);
   const allText = Object.values(state.entries).join('\n');
   const keywordHits = insightKeywords.filter(keyword => allText.includes(keyword)).length;
-  const insight = Math.min(100, Math.round((keywordHits / 8) * 100));
-  const total = Math.round(completeness * 0.3 + depth * 0.3 + coherence * 0.25 + insight * 0.15);
+  const insight = Math.min(100, Math.round((keywordHits / insightKeywordTarget) * 100));
+  const total = Math.round(
+    completeness * scoreWeights.completeness +
+    depth * scoreWeights.depth +
+    coherence * scoreWeights.coherence +
+    insight * scoreWeights.insight
+  );
   const grade = getGrade(total);
 
   return { completeness, depth, coherence, insight, total, grade, filledCount, keywordHits, coherenceHits };
@@ -421,7 +438,7 @@ function exportReport() {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  const safeName = (state.projectName.replace(/[\\/:*?"<>|]+/g, '').trim() || 'bmc-report').slice(0, maxExportFilenameLength);
+  const safeName = getSafeExportFilename(state.projectName);
   link.href = url;
   link.download = `${safeName}-BMC报告.html`;
   document.body.appendChild(link);
